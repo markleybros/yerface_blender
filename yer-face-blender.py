@@ -13,10 +13,46 @@ import bpy
 import os
 import errno
 import json
+import math
 
 isPreviewRunning = False
 myPreviewTimer = None
 myReader = None
+myUpdater = None
+unitScale = 0.001
+
+
+class YerFaceSceneUpdater:
+    def __init__(self, context):
+        self.object = context.scene.objects['Cube']
+        self.locationOffsetX = 0.0
+        self.locationOffsetY = 0.0
+        self.locationOffsetZ = 0.0
+        self.rotationOffsetX = 0.0
+        self.rotationOffsetY = 0.0
+        self.rotationOffsetZ = 0.0
+    def runUpdate(self):
+        global myReader
+        global unitScale
+        packets = myReader.returnNextPackets()
+        if len(packets) < 1:
+            return
+        for packet in packets:
+            if packet['meta']['basis']:
+                if 'pose' in packet:
+                    self.locationOffsetX = packet['pose']['translation']['x'] * (-1.0) * unitScale
+                    self.locationOffsetY = packet['pose']['translation']['z'] * unitScale
+                    self.locationOffsetZ = packet['pose']['translation']['y'] * unitScale
+                    self.rotationOffsetX = packet['pose']['rotation']['x'] * (-1.0)
+                    self.rotationOffsetY = packet['pose']['rotation']['z'] * (-1.0)
+                    self.rotationOffsetZ = packet['pose']['rotation']['y'] * (-1.0)
+            if 'pose' in packet:
+                self.object.delta_location.x = (packet['pose']['translation']['x'] * unitScale) + self.locationOffsetX
+                self.object.delta_location.y = (packet['pose']['translation']['z'] * (-1.0) * unitScale) + self.locationOffsetY
+                self.object.delta_location.z = (packet['pose']['translation']['y'] * (-1.0) * unitScale) + self.locationOffsetZ
+                self.object.delta_rotation_euler.x = math.radians(packet['pose']['rotation']['x'] + self.rotationOffsetX)
+                self.object.delta_rotation_euler.y = math.radians(packet['pose']['rotation']['z'] + self.rotationOffsetY)
+                self.object.delta_rotation_euler.z = math.radians(packet['pose']['rotation']['y'] + self.rotationOffsetZ)
 
 class YerFacePipeReader:
     def __init__(self):
@@ -71,24 +107,24 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
 
     def modal(self, context, event):
         global isPreviewRunning
-        global myReader
+        global myUpdater
         if event.type == 'ESC' or not isPreviewRunning:
             return self.cancel(context)
         if event.type == 'TIMER':
-            packets = myReader.returnNextPackets()
-            if len(packets) > 0:
-                print(packets)
+            myUpdater.runUpdate()
         return {'PASS_THROUGH'}
 
     def execute(self, context):
         global isPreviewRunning
         global myPreviewTimer
         global myReader
+        global myUpdater
         isPreviewRunning = True
         if myReader is None:
             myReader = YerFacePipeReader()
         else:
             myReader.openPipe()
+        myUpdater = YerFaceSceneUpdater(context)
         context.window_manager.modal_handler_add(self)
         myPreviewTimer = context.window_manager.event_timer_add(1/context.scene.render.fps, context.window)
         print("STARTED TIMER")
