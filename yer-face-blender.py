@@ -19,7 +19,7 @@ isPreviewRunning = False
 myPreviewTimer = None
 myReader = None
 myUpdater = None
-unitScale = 0.001
+unitScale = 0.00328084 # millimeters to feet
 
 
 class YerFaceSceneUpdater:
@@ -41,16 +41,16 @@ class YerFaceSceneUpdater:
             if packet['meta']['basis']:
                 if 'pose' in packet:
                     self.locationOffsetX = packet['pose']['translation']['x'] * (-1.0) * unitScale
-                    self.locationOffsetY = packet['pose']['translation']['z'] * unitScale
+                    self.locationOffsetY = packet['pose']['translation']['z'] * (-1.0) * unitScale
                     self.locationOffsetZ = packet['pose']['translation']['y'] * unitScale
-                    self.rotationOffsetX = packet['pose']['rotation']['x'] * (-1.0)
+                    self.rotationOffsetX = packet['pose']['rotation']['x']
                     self.rotationOffsetY = packet['pose']['rotation']['z'] * (-1.0)
                     self.rotationOffsetZ = packet['pose']['rotation']['y'] * (-1.0)
             if 'pose' in packet:
                 self.object.delta_location.x = (packet['pose']['translation']['x'] * unitScale) + self.locationOffsetX
-                self.object.delta_location.y = (packet['pose']['translation']['z'] * (-1.0) * unitScale) + self.locationOffsetY
+                self.object.delta_location.y = (packet['pose']['translation']['z'] * unitScale) + self.locationOffsetY
                 self.object.delta_location.z = (packet['pose']['translation']['y'] * (-1.0) * unitScale) + self.locationOffsetZ
-                self.object.delta_rotation_euler.x = math.radians(packet['pose']['rotation']['x'] + self.rotationOffsetX)
+                self.object.delta_rotation_euler.x = math.radians((packet['pose']['rotation']['x'] * (-1.0)) + self.rotationOffsetX)
                 self.object.delta_rotation_euler.y = math.radians(packet['pose']['rotation']['z'] + self.rotationOffsetY)
                 self.object.delta_rotation_euler.z = math.radians(packet['pose']['rotation']['y'] + self.rotationOffsetZ)
 
