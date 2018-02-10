@@ -22,6 +22,22 @@ myUpdater = None
 unitScale = 0.00328084 # millimeters to feet
 
 
+def yerFaceCoordinateMapper(inputs):
+    global unitScale
+    outputs = {}
+    outputs['x'] = inputs['x'] * unitScale
+    outputs['y'] = inputs['z'] * unitScale
+    outputs['z'] = inputs['y'] * (-1.0) * unitScale
+    return outputs
+
+def yerFaceRotationMapper(inputs):
+    outputs = {}
+    outputs['x'] = inputs['x'] * (-1.0)
+    outputs['y'] = inputs['z']
+    outputs['z'] = inputs['y']
+    return outputs
+
+
 class YerFaceSceneUpdater:
     def __init__(self, context):
         self.object = context.scene.objects['Cube']
@@ -40,19 +56,23 @@ class YerFaceSceneUpdater:
         for packet in packets:
             if packet['meta']['basis']:
                 if 'pose' in packet:
-                    self.locationOffsetX = packet['pose']['translation']['x'] * (-1.0) * unitScale
-                    self.locationOffsetY = packet['pose']['translation']['z'] * (-1.0) * unitScale
-                    self.locationOffsetZ = packet['pose']['translation']['y'] * unitScale
-                    self.rotationOffsetX = packet['pose']['rotation']['x']
-                    self.rotationOffsetY = packet['pose']['rotation']['z'] * (-1.0)
-                    self.rotationOffsetZ = packet['pose']['rotation']['y'] * (-1.0)
+                    translation = yerFaceCoordinateMapper(packet['pose']['translation'])
+                    self.locationOffsetX = translation['x']
+                    self.locationOffsetY = translation['y']
+                    self.locationOffsetZ = translation['z']
+                    rotation = yerFaceRotationMapper(packet['pose']['rotation'])
+                    self.rotationOffsetX = rotation['x']
+                    self.rotationOffsetY = rotation['y']
+                    self.rotationOffsetZ = rotation['z']
             if 'pose' in packet:
-                self.object.delta_location.x = (packet['pose']['translation']['x'] * unitScale) + self.locationOffsetX
-                self.object.delta_location.y = (packet['pose']['translation']['z'] * unitScale) + self.locationOffsetY
-                self.object.delta_location.z = (packet['pose']['translation']['y'] * (-1.0) * unitScale) + self.locationOffsetZ
-                self.object.delta_rotation_euler.x = math.radians((packet['pose']['rotation']['x'] * (-1.0)) + self.rotationOffsetX)
-                self.object.delta_rotation_euler.y = math.radians(packet['pose']['rotation']['z'] + self.rotationOffsetY)
-                self.object.delta_rotation_euler.z = math.radians(packet['pose']['rotation']['y'] + self.rotationOffsetZ)
+                translation = yerFaceCoordinateMapper(packet['pose']['translation'])
+                self.object.delta_location.x = translation['x'] - self.locationOffsetX
+                self.object.delta_location.y = translation['y'] - self.locationOffsetY
+                self.object.delta_location.z = translation['z'] - self.locationOffsetZ
+                rotation = yerFaceRotationMapper(packet['pose']['rotation'])
+                self.object.delta_rotation_euler.x = math.radians(rotation['x'] - self.rotationOffsetX)
+                self.object.delta_rotation_euler.y = math.radians(rotation['y'] - self.rotationOffsetY)
+                self.object.delta_rotation_euler.z = math.radians(rotation['z'] - self.rotationOffsetZ)
 
 class YerFacePipeReader:
     def __init__(self):
