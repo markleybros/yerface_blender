@@ -42,7 +42,7 @@ def yerFaceTopBoneCoordinateMapper(inputs):
     outputs = {}
     outputs['x'] = inputs['x'] * unitScale
     outputs['y'] = inputs['y'] * unitScale
-    outputs['z'] = inputs['z'] * unitScale
+    outputs['z'] = inputs['z'] * (-1.0) * unitScale
     return outputs
 
 def yerFaceTopBoneRotationMapper(inputs):
