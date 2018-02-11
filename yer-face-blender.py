@@ -57,6 +57,8 @@ class YerFaceSceneUpdater:
     def __init__(self, context):
         self.object = context.scene.objects['Snufflefungus']
         self.topBone = self.object.pose.bones['Top']
+        self.faceArmature = context.scene.objects['Snufflefungus Face Armature']
+        self.faceArmatureBones = self.faceArmature.pose.bones
         print(self.topBone)
         self.locationOffsetX = 0.0
         self.locationOffsetY = 0.0
@@ -64,6 +66,7 @@ class YerFaceSceneUpdater:
         self.rotationOffsetX = 0.0
         self.rotationOffsetY = 0.0
         self.rotationOffsetZ = 0.0
+        self.trackerOffsets = {}
     def runUpdate(self):
         global myReader
         global unitScale
@@ -81,6 +84,13 @@ class YerFaceSceneUpdater:
                     self.rotationOffsetX = rotation['x']
                     self.rotationOffsetY = rotation['y']
                     self.rotationOffsetZ = rotation['z']
+                if 'trackers' in packet:
+                    for name, tracker in packet['trackers'].items():
+                        translation = yerFaceTopBoneCoordinateMapper(tracker['position'])
+                        self.trackerOffsets[name] = {}
+                        self.trackerOffsets[name]['x'] = translation['x']
+                        self.trackerOffsets[name]['y'] = translation['y']
+                        self.trackerOffsets[name]['z'] = translation['z']
             if 'pose' in packet:
                 translation = yerFaceTopBoneCoordinateMapper(packet['pose']['translation'])
                 self.topBone.location.x = translation['x'] - self.locationOffsetX
@@ -91,6 +101,19 @@ class YerFaceSceneUpdater:
                 self.topBone.rotation_euler.x = math.radians(rotation['x'] - self.rotationOffsetX)
                 self.topBone.rotation_euler.y = math.radians(rotation['y'] - self.rotationOffsetY)
                 self.topBone.rotation_euler.z = math.radians(rotation['z'] - self.rotationOffsetZ)
+            if 'trackers' in packet:
+                for name, tracker in packet['trackers'].items():
+                    if name not in self.trackerOffsets:
+                        self.trackerOffsets[name] = {'x': 0.0, 'y': 0.0, 'z': 0.0}
+
+                    if name not in self.faceArmatureBones:
+                        print("Could not operate on bone " + name + " because it does not exist within armature!")
+                    else:
+                        bone = self.faceArmatureBones[name]
+                        translation = yerFaceTopBoneCoordinateMapper(tracker['position'])
+                        bone.location.x = translation['x'] - self.trackerOffsets[name]['x']
+                        bone.location.y = translation['y'] - self.trackerOffsets[name]['y']
+                        bone.location.z = translation['z'] - self.trackerOffsets[name]['z']
 
 class YerFacePipeReader:
     def __init__(self):
