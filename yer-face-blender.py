@@ -22,20 +22,20 @@ myUpdater = None
 unitScale = 0.00328084 # millimeters to feet
 
 
-def yerFaceCoordinateMapper(inputs):
-    global unitScale
-    outputs = {}
-    outputs['x'] = inputs['x'] * unitScale
-    outputs['y'] = inputs['z'] * unitScale
-    outputs['z'] = inputs['y'] * (-1.0) * unitScale
-    return outputs
-
-def yerFaceRotationMapper(inputs):
-    outputs = {}
-    outputs['x'] = inputs['x'] * (-1.0)
-    outputs['y'] = inputs['z']
-    outputs['z'] = inputs['y']
-    return outputs
+# def yerFaceCoordinateMapper(inputs):
+#     global unitScale
+#     outputs = {}
+#     outputs['x'] = inputs['x'] * unitScale
+#     outputs['y'] = inputs['z'] * unitScale
+#     outputs['z'] = inputs['y'] * (-1.0) * unitScale
+#     return outputs
+#
+# def yerFaceRotationMapper(inputs):
+#     outputs = {}
+#     outputs['x'] = inputs['x'] * (-1.0)
+#     outputs['y'] = inputs['z']
+#     outputs['z'] = inputs['y']
+#     return outputs
 
 def yerFaceTopBoneCoordinateMapper(inputs):
     global unitScale
@@ -50,6 +50,14 @@ def yerFaceTopBoneRotationMapper(inputs):
     outputs['x'] = inputs['x'] * (-1.0)
     outputs['y'] = inputs['y']
     outputs['z'] = inputs['z'] * (-1.0)
+    return outputs
+
+def yerFaceFaceBoneCoordinateMapper(inputs):
+    global unitScale
+    outputs = {}
+    outputs['x'] = inputs['x'] * unitScale
+    outputs['y'] = inputs['y'] * (-1.0) * unitScale
+    outputs['z'] = inputs['z'] * (-1.0) * unitScale
     return outputs
 
 
@@ -86,7 +94,7 @@ class YerFaceSceneUpdater:
                     self.rotationOffsetZ = rotation['z']
                 if 'trackers' in packet:
                     for name, tracker in packet['trackers'].items():
-                        translation = yerFaceTopBoneCoordinateMapper(tracker['position'])
+                        translation = yerFaceFaceBoneCoordinateMapper(tracker['position'])
                         self.trackerOffsets[name] = {}
                         self.trackerOffsets[name]['x'] = translation['x']
                         self.trackerOffsets[name]['y'] = translation['y']
@@ -103,6 +111,9 @@ class YerFaceSceneUpdater:
                 self.topBone.rotation_euler.z = math.radians(rotation['z'] - self.rotationOffsetZ)
             if 'trackers' in packet:
                 for name, tracker in packet['trackers'].items():
+                    # if name not in ["EyebrowLeftInner", "EyebrowLeftMiddle", "EyebrowLeftOuter", "EyebrowRightInner", "EyebrowRightMiddle", "EyebrowRightOuter"]:
+                    #     continue
+
                     if name not in self.trackerOffsets:
                         self.trackerOffsets[name] = {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
@@ -110,7 +121,7 @@ class YerFaceSceneUpdater:
                         print("Could not operate on bone " + name + " because it does not exist within armature!")
                     else:
                         bone = self.faceArmatureBones[name]
-                        translation = yerFaceTopBoneCoordinateMapper(tracker['position'])
+                        translation = yerFaceFaceBoneCoordinateMapper(tracker['position'])
                         bone.location.x = translation['x'] - self.trackerOffsets[name]['x']
                         bone.location.y = translation['y'] - self.trackerOffsets[name]['y']
                         bone.location.z = translation['z'] - self.trackerOffsets[name]['z']
