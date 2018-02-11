@@ -19,7 +19,8 @@ isPreviewRunning = False
 myPreviewTimer = None
 myReader = None
 myUpdater = None
-unitScale = 0.00328084 # millimeters to feet
+#unitScale = 0.00328084 # millimeters to feet
+unitScale = 0.01
 
 
 # def yerFaceCoordinateMapper(inputs):
@@ -41,7 +42,7 @@ def yerFaceTopBoneCoordinateMapper(inputs):
     global unitScale
     outputs = {}
     outputs['x'] = inputs['x'] * unitScale
-    outputs['y'] = inputs['y'] * unitScale
+    outputs['y'] = inputs['y'] * (-1.0) * unitScale
     outputs['z'] = inputs['z'] * (-1.0) * unitScale
     return outputs
 
