@@ -19,12 +19,11 @@ isPreviewRunning = False
 myPreviewTimer = None
 myReader = None
 myUpdater = None
-#unitScale = 0.00328084 # millimeters to feet
-unitScale = 0.01
+unitScale = 0.00328084 # millimeters to feet
+faceBoneUnitScale = 0.01
 
 
 # def yerFaceCoordinateMapper(inputs):
-#     global unitScale
 #     outputs = {}
 #     outputs['x'] = inputs['x'] * unitScale
 #     outputs['y'] = inputs['z'] * unitScale
@@ -39,7 +38,6 @@ unitScale = 0.01
 #     return outputs
 
 def yerFaceTopBoneCoordinateMapper(inputs):
-    global unitScale
     outputs = {}
     outputs['x'] = inputs['x'] * unitScale
     outputs['y'] = inputs['y'] * (-1.0) * unitScale
@@ -54,11 +52,10 @@ def yerFaceTopBoneRotationMapper(inputs):
     return outputs
 
 def yerFaceFaceBoneCoordinateMapper(inputs):
-    global unitScale
     outputs = {}
-    outputs['x'] = inputs['x'] * unitScale
-    outputs['y'] = inputs['y'] * (-1.0) * unitScale
-    outputs['z'] = inputs['z'] * (-1.0) * unitScale
+    outputs['x'] = inputs['x'] * faceBoneUnitScale
+    outputs['y'] = inputs['y'] * (-1.0) * faceBoneUnitScale
+    outputs['z'] = inputs['z'] * (-1.0) * faceBoneUnitScale
     return outputs
 
 
@@ -68,7 +65,6 @@ class YerFaceSceneUpdater:
         self.topBone = self.object.pose.bones['Top']
         self.faceArmature = context.scene.objects['Snufflefungus Face Armature']
         self.faceArmatureBones = self.faceArmature.pose.bones
-        print(self.topBone)
         self.locationOffsetX = 0.0
         self.locationOffsetY = 0.0
         self.locationOffsetZ = 0.0
@@ -78,7 +74,6 @@ class YerFaceSceneUpdater:
         self.trackerOffsets = {}
     def runUpdate(self):
         global myReader
-        global unitScale
         packets = myReader.returnNextPackets()
         if len(packets) < 1:
             return
@@ -112,9 +107,6 @@ class YerFaceSceneUpdater:
                 self.topBone.rotation_euler.z = math.radians(rotation['z'] - self.rotationOffsetZ)
             if 'trackers' in packet:
                 for name, tracker in packet['trackers'].items():
-                    # if name not in ["EyebrowLeftInner", "EyebrowLeftMiddle", "EyebrowLeftOuter", "EyebrowRightInner", "EyebrowRightMiddle", "EyebrowRightOuter"]:
-                    #     continue
-
                     if name not in self.trackerOffsets:
                         self.trackerOffsets[name] = {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
