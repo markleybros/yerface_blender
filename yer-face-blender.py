@@ -19,7 +19,8 @@ isPreviewRunning = False
 myPreviewTimer = None
 myReader = None
 myUpdater = None
-unitScale = 0.00328084 # millimeters to feet
+#unitScale = 0.00328084 # millimeters to feet
+unitScale = 0.01
 faceBoneUnitScale = 0.01
 
 
