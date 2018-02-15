@@ -22,6 +22,9 @@ myUpdater = None
 #unitScale = 0.00328084 # millimeters to feet
 unitScale = 0.01
 faceBoneUnitScale = 0.01
+poseLocationXScale = 0.5
+poseLocationYScale = 1.0
+poseLocationZScale = 0.5
 
 
 # def yerFaceCoordinateMapper(inputs):
@@ -97,10 +100,11 @@ class YerFaceSceneUpdater:
                         self.trackerOffsets[name]['y'] = translation['y']
                         self.trackerOffsets[name]['z'] = translation['z']
             if 'pose' in packet:
+                global poseLocationXScale, poseLocationYScale, poseLocationZScale;
                 translation = yerFaceTopBoneCoordinateMapper(packet['pose']['translation'])
-                self.topBone.location.x = translation['x'] - self.locationOffsetX
-                self.topBone.location.y = translation['y'] - self.locationOffsetY
-                self.topBone.location.z = translation['z'] - self.locationOffsetZ
+                self.topBone.location.x = poseLocationXScale * (translation['x'] - self.locationOffsetX)
+                self.topBone.location.y = poseLocationYScale * (translation['y'] - self.locationOffsetY)
+                self.topBone.location.z = poseLocationZScale * (translation['z'] - self.locationOffsetZ)
                 rotation = yerFaceTopBoneRotationMapper(packet['pose']['rotation'])
                 self.topBone.rotation_mode = 'XYZ'
                 self.topBone.rotation_euler.x = math.radians(rotation['x'] - self.rotationOffsetX)
