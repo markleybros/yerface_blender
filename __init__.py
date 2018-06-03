@@ -16,15 +16,14 @@ import errno
 import json
 import math
 import time
+from threading import Lock, Thread
 
 def syspathMunge(newpath):
     if newpath not in sys.path:
         sys.path.append(newpath)
 
 syspathMunge(os.path.abspath(os.path.dirname(__file__) + "/vendor"))
-print(sys.path)
 from lomond import WebSocket
-from lomond.persist import persist
 
 isPreviewRunning = False
 myPreviewTimer = None
@@ -136,56 +135,52 @@ class YerFaceSceneUpdater:
 
 class YerFaceWebsocketReader:
     def __init__(self):
+        self.packets = None
+        self.packetsLock = Lock()
         self.websocket = None
+        self.thread = None
+        self.running = False
     def openWebsocket(self):
-        self.websocket = WebSocket('ws://localhost:9002')
-        # self.pipe = None
-        # self.packetBuffer = ""
-        # self.pipe = os.open("/tmp/yerface", os.O_RDONLY | os.O_NONBLOCK)
+        self.packets = []
+        self.running = True
+        self.thread = Thread(target=self.runWebsocketThread)
+        self.thread.start()
     def closeWebsocket(self):
+        self.running = False
         self.websocket.close()
+        self.thread.join()
+        self.thread = None
         self.websocket = None
-        # os.close(self.pipe)
-        # self.pipe = None
-    def returnNextPackets(self):
-        print("PUMPING WEBSOCKET EVENTS :::")
-        for event in persist(websocket):
-            if event.name == 'text':
-                print(event.text)
-        print("::: FINISHED PUMPING WEBSOCKET EVENTS")
-        packets = []
-        return packets
-        gotAnyFragments = False
-        buffer = True
-        while buffer != None:
-            try:
-                buffer = os.read(self.pipe, 1024)
-                if len(buffer) > 0:
-                    self.packetBuffer += buffer.decode('UTF-8')
-                    gotAnyFragments = True
-                else:
-                    buffer = None
-            except OSError as err:
-                if err.errno == errno.EAGAIN or err.errno == errno.EWOULDBLOCK:
-                    buffer = None
-                else:
-                    raise
-        if gotAnyFragments:
-            hunting = True
-            while hunting:
-                firstBreak = self.packetBuffer.find("\n")
-                if firstBreak >= 0:
-                    packet = self.packetBuffer[:firstBreak]
-                    self.packetBuffer = self.packetBuffer[firstBreak+1:]
+    def runWebsocketThread(self):
+        attempt = 0
+        while self.running:
+            if attempt > 0:
+                time.sleep(0.1)
+            attempt = attempt + 1
+            self.websocket = WebSocket('ws://localhost:9002')
+            for event in self.websocket:
+                if event.name == 'text':
                     packetObj = None
                     try:
-                        packetObj = json.loads(packet)
-                        packets.append(packetObj)
+                        packetObj = json.loads(event.text)
                     except:
-                        print("Failed parsing a packet as JSON: " + packet)
+                        print("Failed parsing a Websocket event as JSON: " + event.text)
+                        continue
+                    if packetObj == None:
+                        print("Got a NULL event for some reason.")
+                        continue
+                    self.packetsLock.acquire()
+                    self.packets.append(packetObj)
+                    self.packetsLock.release()
                 else:
-                    hunting = False
-        return packets
+                    if not self.running:
+                        print("Websocket client thread exiting.")
+                        return
+    def returnNextPackets(self):
+        self.packetsLock.acquire()
+        copyPackets = list(self.packets)
+        self.packetsLock.release()
+        return copyPackets
 
 
 class YerFacePreviewStartOperator(bpy.types.Operator):
