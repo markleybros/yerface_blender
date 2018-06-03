@@ -1,19 +1,30 @@
 
 bl_info = {
-    'name': 'Yer Face: Blender Plugin',
+    'name': 'YerFace: Blender Plugin',
     'author': 'Alex Markley',
     'version': (0, 0, 1),
     'blender': (2, 79, 0),
     'location': 'TBD',
-    'description': 'Blender integration with the Yer Face performance capture tool.',
+    'description': 'Blender integration with the YerFace performance capture tool.',
     'category': 'Animation'
 }
 
 import bpy
+import sys
 import os
 import errno
 import json
 import math
+import time
+
+def syspathMunge(newpath):
+    if newpath not in sys.path:
+        sys.path.append(newpath)
+
+syspathMunge(os.path.abspath(os.path.dirname(__file__) + "/vendor"))
+print(sys.path)
+from lomond import WebSocket
+from lomond.persist import persist
 
 isPreviewRunning = False
 myPreviewTimer = None
@@ -25,7 +36,6 @@ faceBoneUnitScale = 0.01
 poseLocationXScale = 0.5
 poseLocationYScale = 1.0
 poseLocationZScale = 0.5
-
 
 # def yerFaceCoordinateMapper(inputs):
 #     outputs = {}
@@ -124,18 +134,27 @@ class YerFaceSceneUpdater:
                         bone.location.y = translation['y'] - self.trackerOffsets[name]['y']
                         bone.location.z = translation['z'] - self.trackerOffsets[name]['z']
 
-class YerFacePipeReader:
+class YerFaceWebsocketReader:
     def __init__(self):
-        self.openPipe()
-    def openPipe(self):
-        self.pipe = None
-        self.packetBuffer = ""
-        self.pipe = os.open("/tmp/yerface", os.O_RDONLY | os.O_NONBLOCK)
-    def closePipe(self):
-        os.close(self.pipe)
-        self.pipe = None
+        self.websocket = None
+    def openWebsocket(self):
+        self.websocket = WebSocket('ws://localhost:9002')
+        # self.pipe = None
+        # self.packetBuffer = ""
+        # self.pipe = os.open("/tmp/yerface", os.O_RDONLY | os.O_NONBLOCK)
+    def closeWebsocket(self):
+        self.websocket.close()
+        self.websocket = None
+        # os.close(self.pipe)
+        # self.pipe = None
     def returnNextPackets(self):
+        print("PUMPING WEBSOCKET EVENTS :::")
+        for event in persist(websocket):
+            if event.name == 'text':
+                print(event.text)
+        print("::: FINISHED PUMPING WEBSOCKET EVENTS")
         packets = []
+        return packets
         gotAnyFragments = False
         buffer = True
         while buffer != None:
@@ -191,9 +210,8 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
         global myUpdater
         isPreviewRunning = True
         if myReader is None:
-            myReader = YerFacePipeReader()
-        else:
-            myReader.openPipe()
+            myReader = YerFaceWebsocketReader()
+        myReader.openWebsocket()
         myUpdater = YerFaceSceneUpdater(context)
         context.window_manager.modal_handler_add(self)
         myPreviewTimer = context.window_manager.event_timer_add(1/context.scene.render.fps, context.window)
@@ -206,7 +224,7 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
         if isPreviewRunning:
             isPreviewRunning = False
             context.window_manager.event_timer_remove(myPreviewTimer)
-            myReader.closePipe()
+            myReader.closeWebsocket()
             print("CANCELLED TIMER")
         return {'CANCELLED'}
 
