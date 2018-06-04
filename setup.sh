@@ -1,5 +1,5 @@
 #!/bin/sh
 
-pip3 install -r requirements.txt --target vendor/
+pip3 install --upgrade -r requirements.txt --target vendor/
 
 
