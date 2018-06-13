@@ -29,8 +29,8 @@ isPreviewRunning = False
 myPreviewTimer = None
 myReader = None
 myUpdater = None
-#unitScale = 0.00328084 # millimeters to feet
-unitScale = 0.01
+unitScale = 0.00328084 # millimeters to feet
+#unitScale = 0.01
 faceBoneUnitScale = 0.01
 poseLocationXScale = 0.5
 poseLocationYScale = 1.0
@@ -59,8 +59,8 @@ def yerFaceTopBoneCoordinateMapper(inputs):
 
 def yerFaceTopBoneRotationMapper(inputs):
     outputs = {}
-    outputs['x'] = inputs['x'] * (-1.0)
-    outputs['y'] = inputs['y']
+    outputs['x'] = inputs['x']
+    outputs['y'] = inputs['y'] * (-1.0)
     outputs['z'] = inputs['z'] * (-1.0)
     return outputs
 
