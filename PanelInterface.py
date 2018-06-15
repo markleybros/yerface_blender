@@ -10,12 +10,23 @@ class ToolsPanel(bpy.types.Panel):
     bl_category = "Animation"
 
     def draw(self, context):
+        layout = self.layout
+        props = context.scene.yerFaceBlenderProperties
         # self.layout.label(text="Hello World")
-        self.layout.prop(context.scene.yerFaceBlenderProperties, "websocketURI")
+        layout.prop_search(props, "translationTargetObject", context.scene, "objects")
+        if props.translationTargetObject in context.scene.objects and context.scene.objects[props.translationTargetObject].type == "ARMATURE":
+            obj = context.scene.objects[props.translationTargetObject]
+            layout.prop_search(props, "translationTargetBone", obj.pose, "bones")
+        layout.prop_search(props, "rotationTargetObject", context.scene, "objects")
+        if props.rotationTargetObject in context.scene.objects and context.scene.objects[props.rotationTargetObject].type == "ARMATURE":
+            obj = context.scene.objects[props.rotationTargetObject]
+            layout.prop_search(props, "rotationTargetBone", obj.pose, "bones")
+        layout.prop_search(props, "faceArmatureObject", context.scene, "objects")
+        layout.prop(props, "websocketURI")
         if yerface_blender.PreviewModal.YerFacePreviewStartOperator.isPreviewRunning(None):
-            self.layout.operator("wm.yerface_preview_stop")
+            layout.operator("wm.yerface_preview_stop")
         else:
-            self.layout.operator("wm.yerface_preview_start")
+            layout.operator("wm.yerface_preview_start")
 
 # class TestButton(bpy.types.Operator):
 #     bl_idname = "yerface.testbutton"

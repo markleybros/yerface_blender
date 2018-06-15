@@ -22,14 +22,14 @@ poseLocationZScale = 0.5
 #     outputs['z'] = inputs['y']
 #     return outputs
 
-def yerFaceTopBoneCoordinateMapper(inputs):
+def yerFaceTranslationTargetCoordinateMapper(inputs):
     outputs = {}
     outputs['x'] = inputs['x'] * unitScale
     outputs['y'] = inputs['y'] * (-1.0) * unitScale
     outputs['z'] = inputs['z'] * (-1.0) * unitScale
     return outputs
 
-def yerFaceTopBoneRotationMapper(inputs):
+def yerFaceRotationTargetRotationMapper(inputs):
     outputs = {}
     outputs['x'] = inputs['x']
     outputs['y'] = inputs['y'] * (-1.0)
@@ -46,10 +46,24 @@ def yerFaceFaceBoneCoordinateMapper(inputs):
 
 class YerFaceSceneUpdater:
     def __init__(self, context, myReader):
-        self.object = context.scene.objects['Snufflefungus']
-        self.topBone = self.object.pose.bones['Top']
-        self.faceArmature = context.scene.objects['Snufflefungus Face Armature']
-        self.faceArmatureBones = self.faceArmature.pose.bones
+        self.props = context.scene.yerFaceBlenderProperties
+        self.translationTarget = None
+        if len(self.props.translationTargetObject) > 0:
+            obj = context.scene.objects[self.props.translationTargetObject]
+            self.translationTarget = obj
+            if obj.type == "ARMATURE" and len(self.props.translationTargetBone) > 0:
+                self.translationTarget = obj.pose.bones[self.props.translationTargetBone]
+        self.rotationTarget = None
+        if len(self.props.rotationTargetObject) > 0:
+            obj = context.scene.objects[self.props.rotationTargetObject]
+            self.rotationTarget = obj
+            if obj.type == "ARMATURE" and len(self.props.rotationTargetBone) > 0:
+                self.rotationTarget = obj.pose.bones[self.props.rotationTargetBone]
+        self.faceArmature = None
+        self.faceArmatureBones = None
+        if len(self.props.faceArmatureObject) > 0:
+            self.faceArmature = context.scene.objects[self.props.faceArmatureObject]
+            self.faceArmatureBones = self.faceArmature.pose.bones
         self.locationOffsetX = 0.0
         self.locationOffsetY = 0.0
         self.locationOffsetZ = 0.0
@@ -65,11 +79,11 @@ class YerFaceSceneUpdater:
         for packet in packets:
             if packet['meta']['basis']:
                 if 'pose' in packet:
-                    translation = yerFaceTopBoneCoordinateMapper(packet['pose']['translation'])
+                    translation = yerFaceTranslationTargetCoordinateMapper(packet['pose']['translation'])
                     self.locationOffsetX = translation['x']
                     self.locationOffsetY = translation['y']
                     self.locationOffsetZ = translation['z']
-                    rotation = yerFaceTopBoneRotationMapper(packet['pose']['rotation'])
+                    rotation = yerFaceRotationTargetRotationMapper(packet['pose']['rotation'])
                     self.rotationOffsetX = rotation['x']
                     self.rotationOffsetY = rotation['y']
                     self.rotationOffsetZ = rotation['z']
@@ -82,16 +96,18 @@ class YerFaceSceneUpdater:
                         self.trackerOffsets[name]['z'] = translation['z']
             if 'pose' in packet:
                 global poseLocationXScale, poseLocationYScale, poseLocationZScale;
-                translation = yerFaceTopBoneCoordinateMapper(packet['pose']['translation'])
-                self.topBone.location.x = poseLocationXScale * (translation['x'] - self.locationOffsetX)
-                self.topBone.location.y = poseLocationYScale * (translation['y'] - self.locationOffsetY)
-                self.topBone.location.z = poseLocationZScale * (translation['z'] - self.locationOffsetZ)
-                rotation = yerFaceTopBoneRotationMapper(packet['pose']['rotation'])
-                self.topBone.rotation_mode = 'XYZ'
-                self.topBone.rotation_euler.x = math.radians(rotation['x'] - self.rotationOffsetX)
-                self.topBone.rotation_euler.y = math.radians(rotation['y'] - self.rotationOffsetY)
-                self.topBone.rotation_euler.z = math.radians(rotation['z'] - self.rotationOffsetZ)
-            if 'trackers' in packet:
+                if self.translationTarget is not None:
+                    translation = yerFaceTranslationTargetCoordinateMapper(packet['pose']['translation'])
+                    self.translationTarget.location.x = poseLocationXScale * (translation['x'] - self.locationOffsetX)
+                    self.translationTarget.location.y = poseLocationYScale * (translation['y'] - self.locationOffsetY)
+                    self.translationTarget.location.z = poseLocationZScale * (translation['z'] - self.locationOffsetZ)
+                if self.rotationTarget is not None:
+                    rotation = yerFaceRotationTargetRotationMapper(packet['pose']['rotation'])
+                    self.rotationTarget.rotation_mode = 'XYZ'
+                    self.rotationTarget.rotation_euler.x = math.radians(rotation['x'] - self.rotationOffsetX)
+                    self.rotationTarget.rotation_euler.y = math.radians(rotation['y'] - self.rotationOffsetY)
+                    self.rotationTarget.rotation_euler.z = math.radians(rotation['z'] - self.rotationOffsetZ)
+            if 'trackers' in packet and self.faceArmatureBones is not None:
                 for name, tracker in packet['trackers'].items():
                     if name not in self.trackerOffsets:
                         self.trackerOffsets[name] = {'x': 0.0, 'y': 0.0, 'z': 0.0}
