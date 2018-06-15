@@ -5,12 +5,14 @@ from threading import Lock, Thread
 from lomond import WebSocket
 
 class YerFaceWebsocketReader:
-    def __init__(self):
+    def __init__(self, uri):
         self.packets = None
         self.packetsLock = Lock()
         self.websocket = None
         self.thread = None
         self.running = False
+        self.uri = uri
+        print("YerFaceWebsocketReader initialized with URI: ", self.uri)
     def openWebsocket(self):
         self.packets = []
         self.running = True
@@ -28,7 +30,7 @@ class YerFaceWebsocketReader:
             if attempt > 0:
                 time.sleep(0.25)
             attempt = attempt + 1
-            self.websocket = WebSocket('ws://localhost:9002')
+            self.websocket = WebSocket(self.uri)
             for event in self.websocket:
                 if event.name == 'text':
                     packetObj = None

@@ -29,25 +29,35 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
         global myPreviewTimer
         global myReader
         global myUpdater
+
+        props = context.scene.yerFaceBlenderProperties
+
         isPreviewRunning = True
-        if myReader is None:
-            myReader = yerface_blender.WebsocketReader.YerFaceWebsocketReader()
+        myReader = yerface_blender.WebsocketReader.YerFaceWebsocketReader(props.websocketURI)
         myReader.openWebsocket()
         myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader)
+
         context.window_manager.modal_handler_add(self)
         myPreviewTimer = context.window_manager.event_timer_add(1/context.scene.render.fps, context.window)
         print("STARTED TIMER")
+
         return {'RUNNING_MODAL'}
 
     def cancel(self, context):
         global isPreviewRunning
         global myPreviewTimer
+        global myReader
         if isPreviewRunning:
             isPreviewRunning = False
             context.window_manager.event_timer_remove(myPreviewTimer)
             myReader.closeWebsocket()
+            myReader = None
             print("CANCELLED TIMER")
         return {'CANCELLED'}
+
+    def isPreviewRunning(self):
+        global isPreviewRunning
+        return isPreviewRunning
 
 class YerFacePreviewStopOperator(bpy.types.Operator):
     bl_idname = "wm.yerface_preview_stop"

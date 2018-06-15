@@ -20,15 +20,21 @@ def syspathMunge(newpath):
 
 syspathMunge(os.path.abspath(os.path.dirname(__file__) + "/vendor"))
 
+import yerface_blender.AddonProps
+reload(yerface_blender.AddonProps)
 import yerface_blender.SceneUtilities
 reload(yerface_blender.SceneUtilities)
 import yerface_blender.WebsocketReader
 reload(yerface_blender.WebsocketReader)
 import yerface_blender.PreviewModal
 reload(yerface_blender.PreviewModal)
+import yerface_blender.PanelInterface
+reload(yerface_blender.PanelInterface)
 
 def register():
     bpy.utils.register_module(__name__)
+    bpy.types.Scene.yerFaceBlenderProperties = bpy.props.PointerProperty(type=yerface_blender.AddonProps.YerFaceBlenderProperties)
 
 def unregister():
     bpy.utils.unregister_module(__name__)
+    del bpy.types.Scene.yerFaceBlenderProperties
