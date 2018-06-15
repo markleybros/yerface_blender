@@ -13,27 +13,34 @@ class ToolsPanel(bpy.types.Panel):
         layout = self.layout
         props = context.scene.yerFaceBlenderProperties
 
+        layout.label(text="Motion / Translation Settings:")
         box = layout.box()
-        box.label(text="Motion / Translation Settings")
+        box.label(text="Optional target for facial pose motion:")
         box.prop_search(props, "translationTargetObject", context.scene, "objects")
         if props.translationTargetObject in context.scene.objects and context.scene.objects[props.translationTargetObject].type == "ARMATURE":
             obj = context.scene.objects[props.translationTargetObject]
             box.prop_search(props, "translationTargetBone", obj.pose, "bones")
+        box.label(text="Overall scale for translation:")
         box.prop(props, "translationScale")
+        box.label(text="Per-axis scale for translation:")
+        split = box.split(align=True)
+        split.prop(props, "translationScaleX")
+        split.prop(props, "translationScaleY")
+        split.prop(props, "translationScaleZ")
 
+        layout.label(text="Rotation Settings:")
         box = layout.box()
-        box.label(text="Rotation Settings")
         box.prop_search(props, "rotationTargetObject", context.scene, "objects")
         if props.rotationTargetObject in context.scene.objects and context.scene.objects[props.rotationTargetObject].type == "ARMATURE":
             obj = context.scene.objects[props.rotationTargetObject]
             box.prop_search(props, "rotationTargetBone", obj.pose, "bones")
 
+        layout.label(text="Facial Rig / Bone Settings:")
         box = layout.box()
-        box.label(text="Facial Rig / Bone Settings")
         box.prop_search(props, "faceArmatureObject", context.scene, "objects")
 
+        layout.label(text="Live Input Data Settings:")
         box = layout.box()
-        box.label(text="Live Input Data Settings")
         box.prop(props, "websocketURI")
 
         if yerface_blender.PreviewModal.YerFacePreviewStartOperator.isPreviewRunning(None):

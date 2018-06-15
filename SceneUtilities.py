@@ -2,9 +2,6 @@
 import math
 
 faceBoneUnitScale = 0.01
-poseLocationXScale = 0.5
-poseLocationYScale = 1.0
-poseLocationZScale = 0.5
 
 # def yerFaceCoordinateMapper(inputs):
 #     outputs = {}
@@ -70,6 +67,10 @@ class YerFaceSceneUpdater:
         self.locationOffsetX = 0.0
         self.locationOffsetY = 0.0
         self.locationOffsetZ = 0.0
+        self.translationScaleX = self.props.translationScaleX
+        self.translationScaleY = self.props.translationScaleY
+        self.translationScaleZ = self.props.translationScaleZ
+
         self.rotationOffsetX = 0.0
         self.rotationOffsetY = 0.0
         self.rotationOffsetZ = 0.0
@@ -99,12 +100,11 @@ class YerFaceSceneUpdater:
                         self.trackerOffsets[name]['y'] = translation['y']
                         self.trackerOffsets[name]['z'] = translation['z']
             if 'pose' in packet:
-                global poseLocationXScale, poseLocationYScale, poseLocationZScale;
                 if self.translationTarget is not None:
                     translation = yerFaceTranslationTargetCoordinateMapper(packet['pose']['translation'], self.translationScale)
-                    self.translationTarget.location.x = poseLocationXScale * (translation['x'] - self.locationOffsetX)
-                    self.translationTarget.location.y = poseLocationYScale * (translation['y'] - self.locationOffsetY)
-                    self.translationTarget.location.z = poseLocationZScale * (translation['z'] - self.locationOffsetZ)
+                    self.translationTarget.location.x = self.translationScaleX * (translation['x'] - self.locationOffsetX)
+                    self.translationTarget.location.y = self.translationScaleY * (translation['y'] - self.locationOffsetY)
+                    self.translationTarget.location.z = self.translationScaleZ * (translation['z'] - self.locationOffsetZ)
                 if self.rotationTarget is not None:
                     rotation = yerFaceRotationTargetRotationMapper(packet['pose']['rotation'])
                     self.rotationTarget.rotation_mode = 'XYZ'
