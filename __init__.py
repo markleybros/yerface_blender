@@ -13,17 +13,17 @@ import bpy
 import sys
 import os
 import errno
-import json
 import math
-import time
-from threading import Lock, Thread
+from importlib import reload
 
 def syspathMunge(newpath):
     if newpath not in sys.path:
         sys.path.append(newpath)
 
 syspathMunge(os.path.abspath(os.path.dirname(__file__) + "/vendor"))
-from lomond import WebSocket
+
+import yerface_blender.WebsocketReader
+reload(yerface_blender.WebsocketReader)
 
 isPreviewRunning = False
 myPreviewTimer = None
@@ -132,55 +132,6 @@ class YerFaceSceneUpdater:
                         bone.location.x = translation['x'] - self.trackerOffsets[name]['x']
                         bone.location.y = translation['y'] - self.trackerOffsets[name]['y']
                         bone.location.z = translation['z'] - self.trackerOffsets[name]['z']
-
-class YerFaceWebsocketReader:
-    def __init__(self):
-        self.packets = None
-        self.packetsLock = Lock()
-        self.websocket = None
-        self.thread = None
-        self.running = False
-    def openWebsocket(self):
-        self.packets = []
-        self.running = True
-        self.thread = Thread(target=self.runWebsocketThread)
-        self.thread.start()
-    def closeWebsocket(self):
-        self.running = False
-        self.websocket.close()
-        self.thread.join()
-        self.thread = None
-        self.websocket = None
-    def runWebsocketThread(self):
-        attempt = 0
-        while self.running:
-            if attempt > 0:
-                time.sleep(0.1)
-            attempt = attempt + 1
-            self.websocket = WebSocket('ws://localhost:9002')
-            for event in self.websocket:
-                if event.name == 'text':
-                    packetObj = None
-                    try:
-                        packetObj = json.loads(event.text)
-                    except:
-                        print("Failed parsing a Websocket event as JSON: " + event.text)
-                        continue
-                    if packetObj == None:
-                        print("Got a NULL event for some reason.")
-                        continue
-                    self.packetsLock.acquire()
-                    self.packets.append(packetObj)
-                    self.packetsLock.release()
-                else:
-                    if not self.running:
-                        print("Websocket client thread exiting.")
-                        return
-    def returnNextPackets(self):
-        self.packetsLock.acquire()
-        copyPackets = list(self.packets)
-        self.packetsLock.release()
-        return copyPackets
 
 
 class YerFacePreviewStartOperator(bpy.types.Operator):
