@@ -1,8 +1,6 @@
 
 import math
 
-unitScale = 0.00328084 # millimeters to feet
-#unitScale = 0.01
 faceBoneUnitScale = 0.01
 poseLocationXScale = 0.5
 poseLocationYScale = 1.0
@@ -22,7 +20,7 @@ poseLocationZScale = 0.5
 #     outputs['z'] = inputs['y']
 #     return outputs
 
-def yerFaceTranslationTargetCoordinateMapper(inputs):
+def yerFaceTranslationTargetCoordinateMapper(inputs, unitScale):
     outputs = {}
     outputs['x'] = inputs['x'] * unitScale
     outputs['y'] = inputs['y'] * (-1.0) * unitScale
@@ -47,23 +45,28 @@ def yerFaceFaceBoneCoordinateMapper(inputs):
 class YerFaceSceneUpdater:
     def __init__(self, context, myReader):
         self.props = context.scene.yerFaceBlenderProperties
-        self.translationTarget = None
-        if len(self.props.translationTargetObject) > 0:
-            obj = context.scene.objects[self.props.translationTargetObject]
-            self.translationTarget = obj
-            if obj.type == "ARMATURE" and len(self.props.translationTargetBone) > 0:
-                self.translationTarget = obj.pose.bones[self.props.translationTargetBone]
-        self.rotationTarget = None
-        if len(self.props.rotationTargetObject) > 0:
-            obj = context.scene.objects[self.props.rotationTargetObject]
-            self.rotationTarget = obj
-            if obj.type == "ARMATURE" and len(self.props.rotationTargetBone) > 0:
-                self.rotationTarget = obj.pose.bones[self.props.rotationTargetBone]
+
+        self.translationTarget = context.scene.objects.get(self.props.translationTargetObject)
+        if self.translationTarget is not None:
+            if self.translationTarget.type == "ARMATURE" and len(self.props.translationTargetBone) > 0:
+                bone = self.translationTarget.pose.bones.get(self.props.translationTargetBone)
+                if bone is not None:
+                    self.translationTarget = bone
+        self.translationScale = self.props.translationScale
+
+        self.rotationTarget = context.scene.objects.get(self.props.rotationTargetObject)
+        if self.rotationTarget is not None:
+            if self.rotationTarget.type == "ARMATURE" and len(self.props.rotationTargetBone) > 0:
+                bone = self.rotationTarget.pose.bones.get(self.props.rotationTargetBone)
+                if bone is not None:
+                    self.rotationTarget = bone
+
         self.faceArmature = None
         self.faceArmatureBones = None
         if len(self.props.faceArmatureObject) > 0:
             self.faceArmature = context.scene.objects[self.props.faceArmatureObject]
             self.faceArmatureBones = self.faceArmature.pose.bones
+
         self.locationOffsetX = 0.0
         self.locationOffsetY = 0.0
         self.locationOffsetZ = 0.0
@@ -71,6 +74,7 @@ class YerFaceSceneUpdater:
         self.rotationOffsetY = 0.0
         self.rotationOffsetZ = 0.0
         self.trackerOffsets = {}
+
         self.reader = myReader
     def runUpdate(self):
         packets = self.reader.returnNextPackets()
@@ -79,7 +83,7 @@ class YerFaceSceneUpdater:
         for packet in packets:
             if packet['meta']['basis']:
                 if 'pose' in packet:
-                    translation = yerFaceTranslationTargetCoordinateMapper(packet['pose']['translation'])
+                    translation = yerFaceTranslationTargetCoordinateMapper(packet['pose']['translation'], self.translationScale)
                     self.locationOffsetX = translation['x']
                     self.locationOffsetY = translation['y']
                     self.locationOffsetZ = translation['z']
@@ -97,7 +101,7 @@ class YerFaceSceneUpdater:
             if 'pose' in packet:
                 global poseLocationXScale, poseLocationYScale, poseLocationZScale;
                 if self.translationTarget is not None:
-                    translation = yerFaceTranslationTargetCoordinateMapper(packet['pose']['translation'])
+                    translation = yerFaceTranslationTargetCoordinateMapper(packet['pose']['translation'], self.translationScale)
                     self.translationTarget.location.x = poseLocationXScale * (translation['x'] - self.locationOffsetX)
                     self.translationTarget.location.y = poseLocationYScale * (translation['y'] - self.locationOffsetY)
                     self.translationTarget.location.z = poseLocationZScale * (translation['z'] - self.locationOffsetZ)
