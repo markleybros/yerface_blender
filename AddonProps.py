@@ -33,6 +33,10 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
     faceArmatureObject = bpy.props.StringProperty(
         name = "Rig",
         default = "")
+    faceBoneTranslationScale = bpy.props.FloatProperty(
+        name = "Scale",
+        default = 0.01,
+        min = 0.0)
     websocketURI = bpy.props.StringProperty(
         name = "Websocket URI",
         default = "ws://localhost:9002")

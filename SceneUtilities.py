@@ -1,8 +1,6 @@
 
 import math
 
-faceBoneUnitScale = 0.01
-
 # def yerFaceCoordinateMapper(inputs):
 #     outputs = {}
 #     outputs['x'] = inputs['x'] * unitScale
@@ -31,11 +29,11 @@ def yerFaceRotationTargetRotationMapper(inputs):
     outputs['z'] = inputs['z'] * (-1.0)
     return outputs
 
-def yerFaceFaceBoneCoordinateMapper(inputs):
+def yerFaceFaceBoneCoordinateMapper(inputs, unitScale):
     outputs = {}
-    outputs['x'] = inputs['x'] * faceBoneUnitScale
-    outputs['y'] = inputs['y'] * (-1.0) * faceBoneUnitScale
-    outputs['z'] = inputs['z'] * (-1.0) * faceBoneUnitScale
+    outputs['x'] = inputs['x'] * unitScale
+    outputs['y'] = inputs['y'] * (-1.0) * unitScale
+    outputs['z'] = inputs['z'] * (-1.0) * unitScale
     return outputs
 
 
@@ -63,6 +61,7 @@ class YerFaceSceneUpdater:
         if len(self.props.faceArmatureObject) > 0:
             self.faceArmature = context.scene.objects[self.props.faceArmatureObject]
             self.faceArmatureBones = self.faceArmature.pose.bones
+        self.faceBoneTranslationScale = self.props.faceBoneTranslationScale
 
         self.locationOffsetX = 0.0
         self.locationOffsetY = 0.0
@@ -94,7 +93,7 @@ class YerFaceSceneUpdater:
                     self.rotationOffsetZ = rotation['z']
                 if 'trackers' in packet:
                     for name, tracker in packet['trackers'].items():
-                        translation = yerFaceFaceBoneCoordinateMapper(tracker['position'])
+                        translation = yerFaceFaceBoneCoordinateMapper(tracker['position'], self.faceBoneTranslationScale)
                         self.trackerOffsets[name] = {}
                         self.trackerOffsets[name]['x'] = translation['x']
                         self.trackerOffsets[name]['y'] = translation['y']
@@ -120,7 +119,7 @@ class YerFaceSceneUpdater:
                         print("Could not operate on bone " + name + " because it does not exist within armature!")
                     else:
                         bone = self.faceArmatureBones[name]
-                        translation = yerFaceFaceBoneCoordinateMapper(tracker['position'])
+                        translation = yerFaceFaceBoneCoordinateMapper(tracker['position'], self.faceBoneTranslationScale)
                         bone.location.x = translation['x'] - self.trackerOffsets[name]['x']
                         bone.location.y = translation['y'] - self.trackerOffsets[name]['y']
                         bone.location.z = translation['z'] - self.trackerOffsets[name]['z']

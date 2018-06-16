@@ -30,6 +30,7 @@ class ToolsPanel(bpy.types.Panel):
 
         layout.label(text="Rotation Settings:")
         box = layout.box()
+        box.label(text="Optional target for facial pose rotation:")
         box.prop_search(props, "rotationTargetObject", context.scene, "objects")
         if props.rotationTargetObject in context.scene.objects and context.scene.objects[props.rotationTargetObject].type == "ARMATURE":
             obj = context.scene.objects[props.rotationTargetObject]
@@ -38,6 +39,8 @@ class ToolsPanel(bpy.types.Panel):
         layout.label(text="Facial Rig / Bone Settings:")
         box = layout.box()
         box.prop_search(props, "faceArmatureObject", context.scene, "objects")
+        box.label(text="Scale for face bone motion:")
+        box.prop(props, "faceBoneTranslationScale")
 
         layout.label(text="Live Input Data Settings:")
         box = layout.box()
