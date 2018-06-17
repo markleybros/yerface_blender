@@ -24,6 +24,7 @@ class YerFaceSceneUpdater:
                 bone = self.rotationTarget.pose.bones.get(self.props.rotationTargetBone)
                 if bone is not None:
                     self.rotationTarget = bone
+        self.rotationScale = self.props.rotationScale
         self.rotationAxisMap = {
             'x': self.interpretAxisMapProp(self.props.rotationAxisMapX),
             'y': self.interpretAxisMapProp(self.props.rotationAxisMapY),
@@ -52,6 +53,10 @@ class YerFaceSceneUpdater:
         self.rotationOffsetX = 0.0
         self.rotationOffsetY = 0.0
         self.rotationOffsetZ = 0.0
+        self.rotationScaleX = self.props.rotationScaleX
+        self.rotationScaleY = self.props.rotationScaleY
+        self.rotationScaleZ = self.props.rotationScaleZ
+
         self.trackerOffsets = {}
 
         self.reader = myReader
@@ -86,9 +91,9 @@ class YerFaceSceneUpdater:
                 if self.rotationTarget is not None:
                     rotation = self.RotationTargetRotationMapper(packet['pose']['rotation'])
                     self.rotationTarget.rotation_mode = 'XYZ'
-                    self.rotationTarget.rotation_euler.x = math.radians(rotation['x'] - self.rotationOffsetX)
-                    self.rotationTarget.rotation_euler.y = math.radians(rotation['y'] - self.rotationOffsetY)
-                    self.rotationTarget.rotation_euler.z = math.radians(rotation['z'] - self.rotationOffsetZ)
+                    self.rotationTarget.rotation_euler.x = math.radians(self.rotationScaleX * (rotation['x'] - self.rotationOffsetX))
+                    self.rotationTarget.rotation_euler.y = math.radians(self.rotationScaleY * (rotation['y'] - self.rotationOffsetY))
+                    self.rotationTarget.rotation_euler.z = math.radians(self.rotationScaleZ * (rotation['z'] - self.rotationOffsetZ))
             if 'trackers' in packet and self.faceArmatureBones is not None:
                 for name, tracker in packet['trackers'].items():
                     if name not in self.trackerOffsets:
@@ -114,7 +119,7 @@ class YerFaceSceneUpdater:
         outputs = {}
         inputs['_'] = 0.0
         for i in ['x', 'y', 'z']:
-            outputs[i] = inputs[self.rotationAxisMap[i]['axis']] * self.rotationAxisMap[i]['invert']
+            outputs[i] = inputs[self.rotationAxisMap[i]['axis']] * self.rotationAxisMap[i]['invert'] * self.rotationScale
         return outputs
 
     def FaceBoneCoordinateMapper(self, inputs):

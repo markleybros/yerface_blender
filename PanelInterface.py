@@ -47,6 +47,13 @@ class ToolsPanel(bpy.types.Panel):
         row.prop(props, "rotationShowAdvanced", icon="TRIA_DOWN" if props.rotationShowAdvanced else "TRIA_RIGHT", icon_only=True, emboss=False)
         row.label(text="Advanced Settings")
         if props.rotationShowAdvanced:
+            box.label(text="Overall scale for rotation:")
+            box.prop(props, "rotationScale")
+            box.label(text="Per-axis scale for rotation:")
+            split = box.split(align=True)
+            split.prop(props, "rotationScaleX")
+            split.prop(props, "rotationScaleY")
+            split.prop(props, "rotationScaleZ")
             box.label(text="Map each target axis to a YerFace axis:")
             box.prop(props, "rotationAxisMapX")
             box.prop(props, "rotationAxisMapY")

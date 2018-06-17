@@ -55,6 +55,22 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         name = "Bone",
         default = "")
     rotationShowAdvanced = bpy.props.BoolProperty(default=False)
+    rotationScale = bpy.props.FloatProperty(
+        name = "Scale",
+        default = 1.0,
+        min = 0.0)
+    rotationScaleX = bpy.props.FloatProperty(
+        name = "X",
+        default = 1.0,
+        min = 0.0)
+    rotationScaleY = bpy.props.FloatProperty(
+        name = "Y",
+        default = 1.0,
+        min = 0.0)
+    rotationScaleZ = bpy.props.FloatProperty(
+        name = "Z",
+        default = 1.0,
+        min = 0.0)
     rotationAxisMapX = bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map X",
