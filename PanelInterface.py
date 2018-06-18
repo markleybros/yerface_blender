@@ -2,6 +2,7 @@
 import bpy
 
 import yerface_blender.PreviewModal
+from yerface_blender.AddonProps import yerFaceInputModeItems
 
 class ToolsPanel(bpy.types.Panel):
     bl_label = "YerFace! Performance Capture"
@@ -74,19 +75,22 @@ class ToolsPanel(bpy.types.Panel):
             box.prop(props, "faceBoneAxisMapY")
             box.prop(props, "faceBoneAxisMapZ")
 
-        layout.label(text="Live Input Data Settings:")
+        layout.label(text="Input Mode Settings:")
         box = layout.box()
-        box.prop(props, "websocketURI")
-
-        if yerface_blender.PreviewModal.YerFacePreviewStartOperator.isPreviewRunning(None):
-            layout.operator("wm.yerface_preview_stop")
+        row = box.row(align=True)
+        row.prop(props, "inputMode", expand=True)
+        if props.inputMode == "live":
+            box.label(text="Live input settings:")
+            box.prop(props, "websocketURI")
+            row = box.row(align=False)
+            row.alignment = 'LEFT'
+            if yerface_blender.PreviewModal.YerFacePreviewStartOperator.isPreviewRunning(None):
+                row.operator("wm.yerface_preview_stop")
+            else:
+                row.operator("wm.yerface_preview_start")
         else:
-            layout.operator("wm.yerface_preview_start")
-
-# class TestButton(bpy.types.Operator):
-#     bl_idname = "yerface.testbutton"
-#     bl_label = "Say Hello"
-#
-#     def execute(self, context):
-#         print("Hello world!", context.scene.yerFaceBlenderProperties.websocketURI)
-#         return {'FINISHED'}
+            box.label(text="File input settings:")
+            box.prop(props, "inputFilePath")
+            row = box.row(align=False)
+            row.alignment = 'LEFT'
+            row.operator("yerface.do_import")

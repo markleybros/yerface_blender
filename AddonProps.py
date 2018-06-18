@@ -11,6 +11,11 @@ yerFaceAxisMapEnumItems = [
     ('p._', 'N/A', "Disabled", 6)
 ]
 
+yerFaceInputModeItems = [
+    ('live', 'Live/Network Input', "Live Websocket Input", 0),
+    ('file', 'File Input', "Perfcap File Input", 1)
+]
+
 class YerFaceBlenderProperties(bpy.types.PropertyGroup):
     translationTargetObject = bpy.props.StringProperty(
         name = "Object",
@@ -105,6 +110,14 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         name = "Map Z",
         default = "p.z")
 
+    inputMode = bpy.props.EnumProperty(
+        items = yerFaceInputModeItems,
+        name = "Active Input Mode",
+        default = "live")
     websocketURI = bpy.props.StringProperty(
         name = "Websocket URI",
         default = "ws://localhost:9002")
+    inputFilePath = bpy.props.StringProperty(
+        name="Perfcap JSON File",
+        description="Exported performance capture data from YerFace!",
+        subtype="FILE_PATH")

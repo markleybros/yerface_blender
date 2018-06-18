@@ -28,6 +28,8 @@ import yerface_blender.WebsocketReader
 reload(yerface_blender.WebsocketReader)
 import yerface_blender.PreviewModal
 reload(yerface_blender.PreviewModal)
+import yerface_blender.ImportOperator
+reload(yerface_blender.ImportOperator)
 import yerface_blender.PanelInterface
 reload(yerface_blender.PanelInterface)
 
