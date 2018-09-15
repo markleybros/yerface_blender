@@ -42,10 +42,6 @@ class YerFaceImportOperator(bpy.types.Operator):
             myReader.insertNextPacket(packetObj)
 
             frame = int((packetObj['meta']['startTime'] * fps) + props.importStartFrame)
-            # if nextFrame != prevFrame:
-            #     print("Setting frame: ", nextFrame)
-            #     context.scene.frame_set(nextFrame)
-            #     prevFrame = nextFrame
 
             myUpdater.runUpdate(insertKeyframes=True, currentFrameNumber=frame)
 
