@@ -24,6 +24,8 @@ import yerface_blender.AddonProps
 reload(yerface_blender.AddonProps)
 import yerface_blender.SceneUtilities
 reload(yerface_blender.SceneUtilities)
+import yerface_blender.FIFOReader
+reload(yerface_blender.FIFOReader)
 import yerface_blender.WebsocketReader
 reload(yerface_blender.WebsocketReader)
 import yerface_blender.PreviewModal

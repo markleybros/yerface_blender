@@ -52,5 +52,6 @@ class YerFaceWebsocketReader:
     def returnNextPackets(self):
         self.packetsLock.acquire()
         copyPackets = list(self.packets)
+        self.packets = []
         self.packetsLock.release()
         return copyPackets

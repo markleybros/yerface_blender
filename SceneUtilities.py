@@ -58,9 +58,10 @@ class YerFaceSceneUpdater:
         self.rotationScaleZ = self.props.rotationScaleZ
 
         self.trackerOffsets = {}
+        self.warnedAlready = {}
 
         self.reader = myReader
-    def runUpdate(self):
+    def runUpdate(self, insertKeyframes = False, currentFrameNumber = -1):
         packets = self.reader.returnNextPackets()
         if len(packets) < 1:
             return
@@ -88,25 +89,33 @@ class YerFaceSceneUpdater:
                     self.translationTarget.location.x = self.translationScaleX * (translation['x'] - self.locationOffsetX)
                     self.translationTarget.location.y = self.translationScaleY * (translation['y'] - self.locationOffsetY)
                     self.translationTarget.location.z = self.translationScaleZ * (translation['z'] - self.locationOffsetZ)
+                    if insertKeyframes:
+                        self.translationTarget.keyframe_insert(data_path="location", frame=currentFrameNumber)
                 if self.rotationTarget is not None:
                     rotation = self.RotationTargetRotationMapper(packet['pose']['rotation'])
                     self.rotationTarget.rotation_mode = 'XYZ'
                     self.rotationTarget.rotation_euler.x = math.radians(self.rotationScaleX * (rotation['x'] - self.rotationOffsetX))
                     self.rotationTarget.rotation_euler.y = math.radians(self.rotationScaleY * (rotation['y'] - self.rotationOffsetY))
                     self.rotationTarget.rotation_euler.z = math.radians(self.rotationScaleZ * (rotation['z'] - self.rotationOffsetZ))
+                    if insertKeyframes:
+                        self.rotationTarget.keyframe_insert(data_path="rotation_euler", frame=currentFrameNumber)
             if 'trackers' in packet and self.faceArmatureBones is not None:
                 for name, tracker in packet['trackers'].items():
                     if name not in self.trackerOffsets:
                         self.trackerOffsets[name] = {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
                     if name not in self.faceArmatureBones:
-                        print("Could not operate on bone " + name + " because it does not exist within armature!")
+                        if name not in self.warnedAlready:
+                            print("Could not operate on bone " + name + " because it does not exist within armature!")
+                            self.warnedAlready[name] = True
                     else:
                         bone = self.faceArmatureBones[name]
                         translation = self.FaceBoneCoordinateMapper(tracker['position'])
                         bone.location.x = translation['x'] - self.trackerOffsets[name]['x']
                         bone.location.y = translation['y'] - self.trackerOffsets[name]['y']
                         bone.location.z = translation['z'] - self.trackerOffsets[name]['z']
+                        if insertKeyframes:
+                            bone.keyframe_insert(data_path="location", frame=currentFrameNumber)
 
     def TranslationTargetCoordinateMapper(self, inputs):
         outputs = {}

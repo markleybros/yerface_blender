@@ -91,6 +91,7 @@ class ToolsPanel(bpy.types.Panel):
         else:
             box.label(text="File input settings:")
             box.prop(props, "inputFilePath")
+            box.prop(props, "importStartFrame")
             row = box.row(align=False)
             row.alignment = 'LEFT'
             row.operator("yerface.do_import")

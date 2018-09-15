@@ -121,3 +121,6 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         name="Perfcap JSON File",
         description="Exported performance capture data from YerFace!",
         subtype="FILE_PATH")
+    importStartFrame = bpy.props.IntProperty(
+        name = "Start Frame",
+        default = 1)
