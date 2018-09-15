@@ -27,7 +27,6 @@ class YerFaceImportOperator(bpy.types.Operator):
         fps = context.scene.render.fps / context.scene.render.fps_base
         print("Scene FPS is set to: ", fps)
 
-        prevFrame = None
         for line in f:
             packetObj = None
             try:
