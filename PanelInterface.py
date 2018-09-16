@@ -75,6 +75,17 @@ class ToolsPanel(bpy.types.Panel):
             box.prop(props, "faceBoneAxisMapY")
             box.prop(props, "faceBoneAxisMapZ")
 
+        layout.label(text="Phonemes / Mouth Shapes Settings:")
+        box = layout.box()
+        box.label(text="Optional target for phoneme props:")
+        box.prop_search(props, "phonemesTargetObject", context.scene, "objects")
+        row = box.row()
+        row.prop(props, "phonemesShowAdvanced", icon="TRIA_DOWN" if props.phonemesShowAdvanced else "TRIA_RIGHT", icon_only=True, emboss=False)
+        row.label(text="Advanced Settings")
+        if props.phonemesShowAdvanced:
+            box.label(text="Scale phoneme application:")
+            box.prop(props, "phonemesScale")
+
         layout.label(text="Input Mode Settings:")
         box = layout.box()
         row = box.row(align=True)

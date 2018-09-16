@@ -110,6 +110,15 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         name = "Map Z",
         default = "p.z")
 
+    phonemesTargetObject = bpy.props.StringProperty(
+        name = "Object",
+        default = "")
+    phonemesShowAdvanced = bpy.props.BoolProperty(default=False)
+    phonemesScale = bpy.props.FloatProperty(
+        name = "Scale",
+        default = 1.0,
+        min = 0.0)
+
     inputMode = bpy.props.EnumProperty(
         items = yerFaceInputModeItems,
         name = "Active Input Mode",

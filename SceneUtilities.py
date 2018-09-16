@@ -43,6 +43,11 @@ class YerFaceSceneUpdater:
             'z': self.interpretAxisMapProp(self.props.faceBoneAxisMapZ)
         }
 
+        self.phonemesTarget = None
+        if len(self.props.phonemesTargetObject) > 0:
+            self.phonemesTarget = context.scene.objects.get(self.props.phonemesTargetObject)
+        self.phonemesScale = self.props.phonemesScale
+
         self.locationOffsetX = 0.0
         self.locationOffsetY = 0.0
         self.locationOffsetZ = 0.0
@@ -58,7 +63,9 @@ class YerFaceSceneUpdater:
         self.rotationScaleZ = self.props.rotationScaleZ
 
         self.trackerOffsets = {}
-        self.warnedAlready = {}
+        self.trackerWarnedAlready = {}
+
+        self.phonemesWarnedAlready = {}
 
         self.reader = myReader
     def runUpdate(self, insertKeyframes = False, currentFrameNumber = -1):
@@ -105,9 +112,9 @@ class YerFaceSceneUpdater:
                         self.trackerOffsets[name] = {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
                     if name not in self.faceArmatureBones:
-                        if name not in self.warnedAlready:
+                        if name not in self.trackerWarnedAlready:
                             print("Could not operate on bone " + name + " because it does not exist within armature!")
-                            self.warnedAlready[name] = True
+                            self.trackerWarnedAlready[name] = True
                     else:
                         bone = self.faceArmatureBones[name]
                         translation = self.FaceBoneCoordinateMapper(tracker['position'])
@@ -116,6 +123,17 @@ class YerFaceSceneUpdater:
                         bone.location.z = translation['z'] - self.trackerOffsets[name]['z']
                         if insertKeyframes:
                             bone.keyframe_insert(data_path="location", frame=currentFrameNumber)
+            if 'phonemes' in packet and self.phonemesTarget is not None:
+                for p, val in packet['phonemes'].items():
+                    name = "Phoneme." + p
+                    if name not in self.phonemesTarget:
+                        if name not in self.phonemesWarnedAlready:
+                            print("Could not operate on phoneme property " + name + " because it does not exist as an object property!")
+                            self.phonemesWarnedAlready[name] = True
+                    else:
+                        self.phonemesTarget[name] = val * self.phonemesScale
+                        if insertKeyframes:
+                            self.phonemesTarget.keyframe_insert(data_path="[\"" + name + "\"]", frame=currentFrameNumber)
 
     def TranslationTargetCoordinateMapper(self, inputs):
         outputs = {}
