@@ -38,8 +38,12 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
         myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader)
 
         context.window_manager.modal_handler_add(self)
-        myPreviewTimer = context.window_manager.event_timer_add(1/context.scene.render.fps, context.window)
-        print("STARTED TIMER")
+
+        fps = context.scene.render.fps / context.scene.render.fps_base
+        time_step = 1/fps
+
+        myPreviewTimer = context.window_manager.event_timer_add(time_step, context.window)
+        print("STARTED TIMER w/Time Step: ", time_step)
 
         return {'RUNNING_MODAL'}
 
