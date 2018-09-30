@@ -134,6 +134,10 @@ class YerFaceSceneUpdater:
                         self.phonemesTarget[name] = val * self.phonemesScale
                         if insertKeyframes:
                             self.phonemesTarget.keyframe_insert(data_path="[\"" + name + "\"]", frame=currentFrameNumber)
+                ### FIXME: Not sure of the best way to mark the object dirty after updating custom properties. This works, but it's a hack.
+                if not insertKeyframes:
+                    self.phonemesTarget.location.x += 0.0
+
 
     def TranslationTargetCoordinateMapper(self, inputs):
         outputs = {}
