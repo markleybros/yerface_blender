@@ -67,6 +67,8 @@ class YerFaceSceneUpdater:
 
         self.phonemesWarnedAlready = {}
 
+        self.oldValues = {}
+
         self.reader = myReader
     def runUpdate(self, insertKeyframes = False, currentFrameNumber = -1):
         packets = self.reader.returnNextPackets()
@@ -93,19 +95,29 @@ class YerFaceSceneUpdater:
             if 'pose' in packet:
                 if self.translationTarget is not None:
                     translation = self.TranslationTargetCoordinateMapper(packet['pose']['translation'])
-                    self.translationTarget.location.x = self.translationScaleX * (translation['x'] - self.locationOffsetX)
-                    self.translationTarget.location.y = self.translationScaleY * (translation['y'] - self.locationOffsetY)
-                    self.translationTarget.location.z = self.translationScaleZ * (translation['z'] - self.locationOffsetZ)
+                    newValues = {
+                        "x": self.translationScaleX * (translation['x'] - self.locationOffsetX),
+                        "y": self.translationScaleY * (translation['y'] - self.locationOffsetY),
+                        "z": self.translationScaleZ * (translation['z'] - self.locationOffsetZ)
+                    }
+                    self.translationTarget.location.x = newValues["x"]
+                    self.translationTarget.location.y = newValues["y"]
+                    self.translationTarget.location.z = newValues["z"]
                     if insertKeyframes:
-                        self.translationTarget.keyframe_insert(data_path="location", frame=currentFrameNumber)
+                        self.handleKeyframeInsertion(localKey="translationTarget", target=self.translationTarget, dataPath="location", newValues=newValues, currentFrameNumber=currentFrameNumber)
                 if self.rotationTarget is not None:
                     rotation = self.RotationTargetRotationMapper(packet['pose']['rotation'])
                     self.rotationTarget.rotation_mode = 'XYZ'
-                    self.rotationTarget.rotation_euler.x = math.radians(self.rotationScaleX * (rotation['x'] - self.rotationOffsetX))
-                    self.rotationTarget.rotation_euler.y = math.radians(self.rotationScaleY * (rotation['y'] - self.rotationOffsetY))
-                    self.rotationTarget.rotation_euler.z = math.radians(self.rotationScaleZ * (rotation['z'] - self.rotationOffsetZ))
+                    newValues = {
+                        "x": math.radians(self.rotationScaleX * (rotation['x'] - self.rotationOffsetX)),
+                        "y": math.radians(self.rotationScaleY * (rotation['y'] - self.rotationOffsetY)),
+                        "z": math.radians(self.rotationScaleZ * (rotation['z'] - self.rotationOffsetZ))
+                    }
+                    self.rotationTarget.rotation_euler.x = newValues["x"]
+                    self.rotationTarget.rotation_euler.y = newValues["y"]
+                    self.rotationTarget.rotation_euler.z = newValues["z"]
                     if insertKeyframes:
-                        self.rotationTarget.keyframe_insert(data_path="rotation_euler", frame=currentFrameNumber)
+                        self.handleKeyframeInsertion(localKey="rotationTarget", target=self.rotationTarget, dataPath="rotation_euler", newValues=newValues, currentFrameNumber=currentFrameNumber)
             if 'trackers' in packet and self.faceArmatureBones is not None:
                 for name, tracker in packet['trackers'].items():
                     if name not in self.trackerOffsets:
@@ -118,11 +130,16 @@ class YerFaceSceneUpdater:
                     else:
                         bone = self.faceArmatureBones[name]
                         translation = self.FaceBoneCoordinateMapper(tracker['position'])
-                        bone.location.x = translation['x'] - self.trackerOffsets[name]['x']
-                        bone.location.y = translation['y'] - self.trackerOffsets[name]['y']
-                        bone.location.z = translation['z'] - self.trackerOffsets[name]['z']
+                        newValues = {
+                            "x": translation['x'] - self.trackerOffsets[name]['x'],
+                            "y": translation['y'] - self.trackerOffsets[name]['y'],
+                            "z": translation['z'] - self.trackerOffsets[name]['z']
+                        }
+                        bone.location.x = newValues["x"]
+                        bone.location.y = newValues["y"]
+                        bone.location.z = newValues["z"]
                         if insertKeyframes:
-                            bone.keyframe_insert(data_path="location", frame=currentFrameNumber)
+                            self.handleKeyframeInsertion(localKey="armatureBone-" + name, target=bone, dataPath="location", newValues=newValues, currentFrameNumber=currentFrameNumber)
             if 'phonemes' in packet and self.phonemesTarget is not None:
                 for p, val in packet['phonemes'].items():
                     name = "Phoneme." + p
@@ -131,9 +148,12 @@ class YerFaceSceneUpdater:
                             print("Could not operate on phoneme property " + name + " because it does not exist as an object property!")
                             self.phonemesWarnedAlready[name] = True
                     else:
-                        self.phonemesTarget[name] = val * self.phonemesScale
+                        newValues = {
+                            "phoneme": val * self.phonemesScale
+                        }
+                        self.phonemesTarget[name] = newValues["phoneme"]
                         if insertKeyframes:
-                            self.phonemesTarget.keyframe_insert(data_path="[\"" + name + "\"]", frame=currentFrameNumber)
+                            self.handleKeyframeInsertion(localKey="phoneme-" + name, target=self.phonemesTarget, dataPath="[\"" + name + "\"]", newValues=newValues, currentFrameNumber=currentFrameNumber)
                 ### FIXME: Not sure of the best way to mark the object dirty after updating custom properties. This works, but it's a hack.
                 if not insertKeyframes:
                     self.phonemesTarget.location.x += 0.0
@@ -166,3 +186,25 @@ class YerFaceSceneUpdater:
         if parts[0] == 'n':
             invert = -1.0
         return {'invert': invert, 'axis': parts[1]}
+
+    def interpretAxisAsRNAIndex(self, axis):
+        rnaAxisMap = {
+            "x": 0,
+            "y": 1,
+            "z": 2
+        }
+        if axis in rnaAxisMap:
+            return rnaAxisMap[axis]
+        return -1
+
+    def handleKeyframeInsertion(self, localKey, target, dataPath, newValues, currentFrameNumber):
+        for axis, value in newValues.items():
+            if localKey not in self.oldValues:
+                self.oldValues[localKey] = {}
+            if axis not in self.oldValues[localKey]:
+                self.oldValues[localKey][axis] = {}
+            if "value" in self.oldValues[localKey][axis] and value == self.oldValues[localKey][axis]["value"]:
+                print("deduplicating keyframe: ", localKey, axis)
+                return;
+            target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=currentFrameNumber)
+            self.oldValues[localKey][axis]["value"] = value
