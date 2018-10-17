@@ -75,7 +75,6 @@ class YerFaceSceneUpdater:
         self.reader = myReader
 
     def flushFrame(self):
-        print("flushing frame", self.currentFrameNumber)
         for localKey, dict in self.currentFrameValues.items():
             self.handleKeyframeInsertion(localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"])
         self.currentFrameValues = {}
@@ -232,6 +231,9 @@ class YerFaceSceneUpdater:
                 delta = abs(value - self.lastSetValues[localKey][axis]["value"])
                 if delta < 0.0000000001:
                     continue
+                if self.currentFrameNumber - self.lastSetValues[localKey][axis]["frame"] > self.props.anticipationFrames:
+                    self.handleUpdateTarget(target, dataPath, axis, self.lastSetValues[localKey][axis]["value"])
+                    target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber - self.props.anticipationFrames)
             self.handleUpdateTarget(target, dataPath, axis, value)
             target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber)
             self.lastSetValues[localKey][axis]["value"] = value

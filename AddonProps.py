@@ -133,3 +133,8 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
     importStartFrame = bpy.props.IntProperty(
         name = "Start Frame",
         default = 1)
+    anticipationFrames = bpy.props.IntProperty(
+        name = "Anticipate Motion N Frames Ago",
+        description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
+        min = 1,
+        default = 2)
