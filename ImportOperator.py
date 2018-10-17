@@ -27,6 +27,7 @@ class YerFaceImportOperator(bpy.types.Operator):
         fps = context.scene.render.fps / context.scene.render.fps_base
         print("Scene FPS is set to: ", fps)
 
+        lastFrame = None
         for line in f:
             packetObj = None
             try:
@@ -42,7 +43,14 @@ class YerFaceImportOperator(bpy.types.Operator):
 
             frame = int((packetObj['meta']['startTime'] * fps) + props.importStartFrame)
 
+            if lastFrame is not None and frame != lastFrame:
+                myUpdater.flushFrame()
+
             myUpdater.runUpdate(insertKeyframes=True, currentFrameNumber=frame)
+            lastFrame = frame
+
+        if lastFrame is not None:
+            myUpdater.flushFrame()
 
         f.close()
 
