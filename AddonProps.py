@@ -52,6 +52,11 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         items = yerFaceAxisMapEnumItems,
         name = "Map Z",
         default = "p.z")
+    translationAnticipationFrames = bpy.props.IntProperty(
+        name = "Anticipate Motion N Frames Ago",
+        description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
+        min = 1,
+        default = 15)
 
     rotationTargetObject = bpy.props.StringProperty(
         name = "Object",
@@ -88,6 +93,11 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         items = yerFaceAxisMapEnumItems,
         name = "Map Z",
         default = "p.z")
+    rotationAnticipationFrames = bpy.props.IntProperty(
+        name = "Anticipate Motion N Frames Ago",
+        description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
+        min = 1,
+        default = 15)
 
     faceArmatureObject = bpy.props.StringProperty(
         name = "Rig",
@@ -109,6 +119,11 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         items = yerFaceAxisMapEnumItems,
         name = "Map Z",
         default = "p.z")
+    faceAnticipationFrames = bpy.props.IntProperty(
+        name = "Anticipate Motion N Frames Ago",
+        description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
+        min = 1,
+        default = 15)
 
     phonemesTargetObject = bpy.props.StringProperty(
         name = "Object",
@@ -118,6 +133,11 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         name = "Scale",
         default = 1.0,
         min = 0.0)
+    phonemesAnticipationFrames = bpy.props.IntProperty(
+        name = "Anticipate Motion N Frames Ago",
+        description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
+        min = 1,
+        default = 1)
 
     inputMode = bpy.props.EnumProperty(
         items = yerFaceInputModeItems,
@@ -133,8 +153,3 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
     importStartFrame = bpy.props.IntProperty(
         name = "Start Frame",
         default = 1)
-    anticipationFrames = bpy.props.IntProperty(
-        name = "Anticipate Motion N Frames Ago",
-        description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
-        min = 1,
-        default = 2)

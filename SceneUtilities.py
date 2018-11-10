@@ -76,7 +76,7 @@ class YerFaceSceneUpdater:
 
     def flushFrame(self):
         for localKey, dict in self.currentFrameValues.items():
-            self.handleKeyframeInsertion(localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"])
+            self.handleKeyframeInsertion(localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"], anticipation=dict["anticipation"])
         self.currentFrameValues = {}
 
     def runUpdate(self, insertKeyframes = False, currentFrameNumber = -1):
@@ -109,7 +109,7 @@ class YerFaceSceneUpdater:
                         "z": self.translationScaleZ * (translation['z'] - self.locationOffsetZ)
                     }
                     if insertKeyframes:
-                        self.accumulateFrameData(localKey="translationTarget", target=self.translationTarget, dataPath="location", newValues=newValues)
+                        self.accumulateFrameData(localKey="translationTarget", target=self.translationTarget, dataPath="location", newValues=newValues, anticipation=self.props.translationAnticipationFrames)
                     else:
                         self.handleUpdateTargetAll(target=self.translationTarget, dataPath="location", newValues=newValues)
                 if self.rotationTarget is not None:
@@ -121,7 +121,7 @@ class YerFaceSceneUpdater:
                         "z": math.radians(self.rotationScaleZ * (rotation['z'] - self.rotationOffsetZ))
                     }
                     if insertKeyframes:
-                        self.accumulateFrameData(localKey="rotationTarget", target=self.rotationTarget, dataPath="rotation_euler", newValues=newValues)
+                        self.accumulateFrameData(localKey="rotationTarget", target=self.rotationTarget, dataPath="rotation_euler", newValues=newValues, anticipation=self.props.rotationAnticipationFrames)
                     else:
                         self.handleUpdateTargetAll(target=self.rotationTarget, dataPath="rotation_euler", newValues=newValues)
             if 'trackers' in packet and self.faceArmatureBones is not None:
@@ -142,7 +142,7 @@ class YerFaceSceneUpdater:
                             "z": translation['z'] - self.trackerOffsets[name]['z']
                         }
                         if insertKeyframes:
-                            self.accumulateFrameData(localKey="armatureBone-" + name, target=bone, dataPath="location", newValues=newValues)
+                            self.accumulateFrameData(localKey="armatureBone-" + name, target=bone, dataPath="location", newValues=newValues, anticipation=self.props.faceAnticipationFrames)
                         else:
                             self.handleUpdateTargetAll(target=bone, dataPath="location", newValues=newValues)
             if 'phonemes' in packet and self.phonemesTarget is not None:
@@ -158,7 +158,7 @@ class YerFaceSceneUpdater:
                         }
                         self.phonemesTarget[name] = newValues["phoneme"]
                         if insertKeyframes:
-                            self.accumulateFrameData(localKey="phoneme-" + name, target=self.phonemesTarget, dataPath="[\"" + name + "\"]", newValues=newValues)
+                            self.accumulateFrameData(localKey="phoneme-" + name, target=self.phonemesTarget, dataPath="[\"" + name + "\"]", newValues=newValues, anticipation=self.props.phonemesAnticipationFrames)
                         else:
                             self.handleUpdateTargetAll(target=self.phonemesTarget, dataPath="[\"" + name + "\"]", newValues=newValues)
                 ### FIXME: Not sure of the best way to mark the object dirty after updating custom properties. This works, but it's a hack.
@@ -214,14 +214,15 @@ class YerFaceSceneUpdater:
         else:
             setattr(target, dataPath, value)
 
-    def accumulateFrameData(self, localKey, target, dataPath, newValues):
+    def accumulateFrameData(self, localKey, target, dataPath, newValues, anticipation):
         self.currentFrameValues[localKey] = {
             "target": target,
             "dataPath": dataPath,
+            "anticipation": anticipation,
             "values": newValues
         }
 
-    def handleKeyframeInsertion(self, localKey, target, dataPath, newValues):
+    def handleKeyframeInsertion(self, localKey, target, dataPath, newValues, anticipation):
         for axis, value in newValues.items():
             if localKey not in self.lastSetValues:
                 self.lastSetValues[localKey] = {}
@@ -231,9 +232,9 @@ class YerFaceSceneUpdater:
                 delta = abs(value - self.lastSetValues[localKey][axis]["value"])
                 if delta < 0.0000000001:
                     continue
-                if self.currentFrameNumber - self.lastSetValues[localKey][axis]["frame"] > self.props.anticipationFrames:
+                if self.currentFrameNumber - self.lastSetValues[localKey][axis]["frame"] > anticipation:
                     self.handleUpdateTarget(target, dataPath, axis, self.lastSetValues[localKey][axis]["value"])
-                    target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber - self.props.anticipationFrames)
+                    target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber - anticipation)
             self.handleUpdateTarget(target, dataPath, axis, value)
             target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber)
             self.lastSetValues[localKey][axis]["value"] = value

@@ -36,6 +36,7 @@ class ToolsPanel(bpy.types.Panel):
             box.prop(props, "translationAxisMapX")
             box.prop(props, "translationAxisMapY")
             box.prop(props, "translationAxisMapZ")
+            box.prop(props, "translationAnticipationFrames")
 
         layout.label(text="Rotation Settings:")
         box = layout.box()
@@ -59,6 +60,7 @@ class ToolsPanel(bpy.types.Panel):
             box.prop(props, "rotationAxisMapX")
             box.prop(props, "rotationAxisMapY")
             box.prop(props, "rotationAxisMapZ")
+            box.prop(props, "rotationAnticipationFrames")
 
         layout.label(text="Facial Rig / Bone Settings:")
         box = layout.box()
@@ -74,6 +76,7 @@ class ToolsPanel(bpy.types.Panel):
             box.prop(props, "faceBoneAxisMapX")
             box.prop(props, "faceBoneAxisMapY")
             box.prop(props, "faceBoneAxisMapZ")
+            box.prop(props, "faceAnticipationFrames")
 
         layout.label(text="Phonemes / Mouth Shapes Settings:")
         box = layout.box()
@@ -85,6 +88,7 @@ class ToolsPanel(bpy.types.Panel):
         if props.phonemesShowAdvanced:
             box.label(text="Scale phoneme application:")
             box.prop(props, "phonemesScale")
+            box.prop(props, "phonemesAnticipationFrames")
 
         layout.label(text="Input Mode Settings:")
         box = layout.box()
@@ -103,7 +107,6 @@ class ToolsPanel(bpy.types.Panel):
             box.label(text="File input settings:")
             box.prop(props, "inputFilePath")
             box.prop(props, "importStartFrame")
-            box.prop(props, "anticipationFrames")
             row = box.row(align=False)
             row.alignment = 'LEFT'
             row.operator("yerface.do_import")
