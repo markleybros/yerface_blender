@@ -139,6 +139,13 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         min = 1,
         default = 1)
 
+    tickCallback = bpy.props.StringProperty(
+        name = "Tick Callback",
+        default = "")
+    tickUserData = bpy.props.StringProperty(
+        name = "User Data",
+        default = "")
+
     inputMode = bpy.props.EnumProperty(
         items = yerFaceInputModeItems,
         name = "Active Input Mode",

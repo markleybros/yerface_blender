@@ -17,6 +17,9 @@ class YerFaceImportOperator(bpy.types.Operator):
         myReader = yerface_blender.FIFOReader.YerFaceFIFOReader()
         myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader)
 
+        if props.tickCallback != "":
+            bpy.app.driver_namespace[props.tickCallback](userData=props.tickUserData, resetState=True)
+
         print("Kicked off Yer-Face import with file: ", props.inputFilePath)
         try:
             f = open(props.inputFilePath, "r")

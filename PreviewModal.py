@@ -37,6 +37,9 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
         myReader.openWebsocket()
         myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader)
 
+        if props.tickCallback != "":
+            bpy.app.driver_namespace[props.tickCallback](userData=props.tickUserData, resetState=True)
+
         context.window_manager.modal_handler_add(self)
 
         fps = context.scene.render.fps / context.scene.render.fps_base

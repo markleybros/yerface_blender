@@ -1,5 +1,6 @@
 
 import math
+import bpy
 
 class YerFaceSceneUpdater:
     def __init__(self, context, myReader):
@@ -82,7 +83,16 @@ class YerFaceSceneUpdater:
     def runUpdate(self, insertKeyframes = False, currentFrameNumber = -1):
         self.currentFrameNumber = currentFrameNumber
         packets = self.reader.returnNextPackets()
+
+        if len(packets) < 1 and self.props.tickCallback != "":
+            bpy.app.driver_namespace[self.props.tickCallback](userData=self.props.tickUserData, insertKeyframes=insertKeyframes, currentFrameNumber=currentFrameNumber)
+
         for packet in packets:
+            del packet["events"]
+
+            if self.props.tickCallback != "":
+                bpy.app.driver_namespace[self.props.tickCallback](userData=self.props.tickUserData, perfcapPacket=packet, insertKeyframes=insertKeyframes, currentFrameNumber=currentFrameNumber)
+
             if packet['meta']['basis']:
                 if 'pose' in packet:
                     translation = self.TranslationTargetCoordinateMapper(packet['pose']['translation'])

@@ -90,6 +90,12 @@ class ToolsPanel(bpy.types.Panel):
             box.prop(props, "phonemesScale")
             box.prop(props, "phonemesAnticipationFrames")
 
+        layout.label(text="Custom Code Callback:")
+        box = layout.box()
+        box.label(text="Optionally, specify a driver callback we will pass motion capture data and events to:")
+        box.prop(props, "tickCallback")
+        box.prop(props, "tickUserData")
+
         layout.label(text="Input Mode Settings:")
         box = layout.box()
         row = box.row(align=True)
