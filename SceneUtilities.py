@@ -3,7 +3,7 @@ import math
 import bpy
 
 class YerFaceSceneUpdater:
-    def __init__(self, context, myReader):
+    def __init__(self, context, myReader, fps):
         self.props = context.scene.yerFaceBlenderProperties
 
         self.translationTarget = context.scene.objects.get(self.props.translationTargetObject)
@@ -74,24 +74,48 @@ class YerFaceSceneUpdater:
         self.currentFrameValues = {}
 
         self.reader = myReader
+        self.fps = fps
 
-    def flushFrame(self):
+    def flushFrame(self, flushFrameNumber = -1):
         for localKey, dict in self.currentFrameValues.items():
-            self.handleKeyframeInsertion(localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"], anticipation=dict["anticipation"])
+            self.handleKeyframeInsertion(frameNumber=flushFrameNumber, localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"], anticipation=dict["anticipation"])
         self.currentFrameValues = {}
+        if self.props.tickCallback != "":
+            tickProps = {
+                'userData': self.props.tickUserData,
+                'resetState': False,
+                'perfcapPacket': {},
+                'insertKeyframes': True,
+                'currentFrameNumber': flushFrameNumber,
+                'flushLastFrame': True,
+                'framesPerSecond': self.fps
+            }
+            bpy.app.driver_namespace[self.props.tickCallback](properties=tickProps)
 
     def runUpdate(self, insertKeyframes = False, currentFrameNumber = -1):
         self.currentFrameNumber = currentFrameNumber
         packets = self.reader.returnNextPackets()
 
-        if len(packets) < 1 and self.props.tickCallback != "":
-            bpy.app.driver_namespace[self.props.tickCallback](userData=self.props.tickUserData, insertKeyframes=insertKeyframes, currentFrameNumber=currentFrameNumber)
+        tickProps = {}
+        if self.props.tickCallback != "":
+            tickProps = {
+                'userData': self.props.tickUserData,
+                'resetState': False,
+                'perfcapPacket': {},
+                'insertKeyframes': insertKeyframes,
+                'currentFrameNumber': currentFrameNumber,
+                'flushLastFrame': False,
+                'framesPerSecond': self.fps
+            }
+            if len(packets) < 1:
+                bpy.app.driver_namespace[self.props.tickCallback](properties=tickProps)
 
         for packet in packets:
             del packet["events"]
 
             if self.props.tickCallback != "":
-                bpy.app.driver_namespace[self.props.tickCallback](userData=self.props.tickUserData, perfcapPacket=packet, insertKeyframes=insertKeyframes, currentFrameNumber=currentFrameNumber)
+                tickProps['perfcapPacket'] = packet
+                bpy.app.driver_namespace[self.props.tickCallback](properties=tickProps)
 
             if packet['meta']['basis']:
                 if 'pose' in packet:
@@ -232,7 +256,7 @@ class YerFaceSceneUpdater:
             "values": newValues
         }
 
-    def handleKeyframeInsertion(self, localKey, target, dataPath, newValues, anticipation):
+    def handleKeyframeInsertion(self, frameNumber, localKey, target, dataPath, newValues, anticipation):
         for axis, value in newValues.items():
             if localKey not in self.lastSetValues:
                 self.lastSetValues[localKey] = {}
@@ -244,8 +268,8 @@ class YerFaceSceneUpdater:
                     continue
                 if self.currentFrameNumber - self.lastSetValues[localKey][axis]["frame"] > anticipation:
                     self.handleUpdateTarget(target, dataPath, axis, self.lastSetValues[localKey][axis]["value"])
-                    target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber - anticipation)
+                    target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=frameNumber - anticipation)
             self.handleUpdateTarget(target, dataPath, axis, value)
-            target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber)
+            target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=frameNumber)
             self.lastSetValues[localKey][axis]["value"] = value
-            self.lastSetValues[localKey][axis]["frame"] = self.currentFrameNumber
+            self.lastSetValues[localKey][axis]["frame"] = frameNumber

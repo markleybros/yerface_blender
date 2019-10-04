@@ -22,18 +22,20 @@ syspathMunge(os.path.abspath(os.path.dirname(__file__) + "/vendor"))
 
 import yerface_blender.AddonProps
 reload(yerface_blender.AddonProps)
-import yerface_blender.SceneUtilities
-reload(yerface_blender.SceneUtilities)
+import yerface_blender.DriverUtilities
+reload(yerface_blender.DriverUtilities)
 import yerface_blender.FIFOReader
 reload(yerface_blender.FIFOReader)
-import yerface_blender.WebsocketReader
-reload(yerface_blender.WebsocketReader)
-import yerface_blender.PreviewModal
-reload(yerface_blender.PreviewModal)
 import yerface_blender.ImportOperator
 reload(yerface_blender.ImportOperator)
 import yerface_blender.PanelInterface
 reload(yerface_blender.PanelInterface)
+import yerface_blender.PreviewModal
+reload(yerface_blender.PreviewModal)
+import yerface_blender.SceneUtilities
+reload(yerface_blender.SceneUtilities)
+import yerface_blender.WebsocketReader
+reload(yerface_blender.WebsocketReader)
 
 def register():
     bpy.utils.register_module(__name__)
