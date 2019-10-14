@@ -75,8 +75,8 @@ class YerFaceSceneUpdater:
         self.reader = myReader
         self.fps = fps
 
-    def flushFrame(self, flushFrameNumber = -1):
-        self.keyframeHelper.flushFrame(flushFrameNumber)
+    def flushFrame(self, flushFrameNumber = -1, discardFrameData = False):
+        self.keyframeHelper.flushFrame(flushFrameNumber, discardFrameData)
         if self.props.tickCallback != "":
             tickProps = {
                 'userData': self.props.tickUserData,
@@ -85,6 +85,7 @@ class YerFaceSceneUpdater:
                 'insertKeyframes': True,
                 'currentFrameNumber': flushFrameNumber,
                 'flushLastFrame': True,
+                'discardLastFrameData': discardFrameData,
                 'framesPerSecond': self.fps
             }
             bpy.app.driver_namespace[self.props.tickCallback](properties=tickProps)
@@ -101,6 +102,7 @@ class YerFaceSceneUpdater:
                 'insertKeyframes': insertKeyframes,
                 'currentFrameNumber': currentFrameNumber,
                 'flushLastFrame': False,
+                'discardLastFrameData': False,
                 'framesPerSecond': self.fps
             }
             if len(packets) < 1:

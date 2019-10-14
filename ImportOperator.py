@@ -28,6 +28,7 @@ class YerFaceImportOperator(bpy.types.Operator):
                 'insertKeyframes': True,
                 'currentFrameNumber': None,
                 'flushLastFrame': False,
+                'discardLastFrameData': False,
                 'framesPerSecond': fps
             }
             bpy.app.driver_namespace[props.tickCallback](tickProps)
@@ -56,7 +57,10 @@ class YerFaceImportOperator(bpy.types.Operator):
             frame = int((packetObj['meta']['startTime'] * fps) + props.importStartFrame)
 
             if lastFrame is not None and frame != lastFrame:
-                myUpdater.flushFrame(lastFrame)
+                discardFrame = False
+                if lastFrame < props.importStartFrame:
+                    discardFrame = True
+                myUpdater.flushFrame(lastFrame, discardFrame)
 
             myUpdater.runUpdate(insertKeyframes=True, currentFrameNumber=frame)
             lastFrame = frame

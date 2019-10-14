@@ -36,9 +36,10 @@ class KeyframeHelper:
             "values": newValues
         }
 
-    def flushFrame(self, flushFrameNumber = -1):
-        for localKey, dict in self.currentFrameValues.items():
-            self.handleKeyframeInsertion(frameNumber=flushFrameNumber, localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"], anticipation=dict["anticipation"])
+    def flushFrame(self, flushFrameNumber = -1, discardFrameData = False):
+        if not discardFrameData:
+            for localKey, dict in self.currentFrameValues.items():
+                self.handleKeyframeInsertion(frameNumber=flushFrameNumber, localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"], anticipation=dict["anticipation"])
         self.currentFrameValues = {}
 
     def handleKeyframeInsertion(self, frameNumber, localKey, target, dataPath, newValues, anticipation):

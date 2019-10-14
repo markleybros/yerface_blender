@@ -48,6 +48,7 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
                 'insertKeyframes': False,
                 'currentFrameNumber': None,
                 'flushLastFrame': False,
+                'discardLastFrameData': False,
                 'framesPerSecond': fps
             }
             bpy.app.driver_namespace[props.tickCallback](tickProps)
