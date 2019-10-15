@@ -29,6 +29,7 @@ class YerFaceImportOperator(bpy.types.Operator):
                 'currentFrameNumber': None,
                 'flushLastFrame': False,
                 'discardLastFrameData': False,
+                'samplingMode': None,
                 'framesPerSecond': fps
             }
             bpy.app.driver_namespace[props.tickCallback](tickProps)

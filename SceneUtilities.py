@@ -76,7 +76,7 @@ class YerFaceSceneUpdater:
         self.fps = fps
 
     def flushFrame(self, flushFrameNumber = -1, discardFrameData = False):
-        self.keyframeHelper.flushFrame(flushFrameNumber, discardFrameData)
+        self.keyframeHelper.flushFrame(flushFrameNumber, discardFrameData, self.props.samplingMode)
         if self.props.tickCallback != "":
             tickProps = {
                 'userData': self.props.tickUserData,
@@ -86,6 +86,7 @@ class YerFaceSceneUpdater:
                 'currentFrameNumber': flushFrameNumber,
                 'flushLastFrame': True,
                 'discardLastFrameData': discardFrameData,
+                'samplingMode': self.props.samplingMode,
                 'framesPerSecond': self.fps
             }
             bpy.app.driver_namespace[self.props.tickCallback](properties=tickProps)
@@ -103,6 +104,7 @@ class YerFaceSceneUpdater:
                 'currentFrameNumber': currentFrameNumber,
                 'flushLastFrame': False,
                 'discardLastFrameData': False,
+                'samplingMode': None,
                 'framesPerSecond': self.fps
             }
             if len(packets) < 1:

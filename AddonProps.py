@@ -16,6 +16,12 @@ yerFaceInputModeItems = [
     ('file', 'File Input', "Perfcap File Input", 1)
 ]
 
+yerFaceSamplingModeItems = [
+    ('first', 'First', "Take the first sample for each frame", 0),
+    ('last', 'Last', "Take the last sample for each frame", 1),
+    ('average', 'Average', "Average samples within a frame", 2)
+]
+
 class YerFaceBlenderProperties(bpy.types.PropertyGroup):
     translationTargetObject = bpy.props.StringProperty(
         name = "Object",
@@ -150,6 +156,10 @@ class YerFaceBlenderProperties(bpy.types.PropertyGroup):
         items = yerFaceInputModeItems,
         name = "Active Input Mode",
         default = "live")
+    samplingMode = bpy.props.EnumProperty(
+        items = yerFaceSamplingModeItems,
+        name = "Keyframe Sampling Mode",
+        default = "average")
     websocketURI = bpy.props.StringProperty(
         name = "Websocket URI",
         default = "ws://localhost:9002")

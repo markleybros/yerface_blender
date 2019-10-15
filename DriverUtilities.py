@@ -29,17 +29,33 @@ class KeyframeHelper:
         self.currentFrameValues = {}
 
     def accumulateFrameData(self, localKey, target, dataPath, newValues, anticipation):
-        self.currentFrameValues[localKey] = {
-            "target": target,
-            "dataPath": dataPath,
-            "anticipation": anticipation,
-            "values": newValues
-        }
+        if localKey not in self.currentFrameValues:
+            self.currentFrameValues[localKey] = {
+                "target": target,
+                "dataPath": dataPath,
+                "anticipation": anticipation,
+                "values": {}
+            }
+        for axis, value in newValues.items():
+            if axis not in self.currentFrameValues[localKey]['values']:
+                self.currentFrameValues[localKey]['values'][axis] = [];
+            self.currentFrameValues[localKey]['values'][axis].append(value)
 
-    def flushFrame(self, flushFrameNumber = -1, discardFrameData = False):
+    def flushFrame(self, flushFrameNumber = -1, discardFrameData = False, samplingMode = 'average'):
         if not discardFrameData:
             for localKey, dict in self.currentFrameValues.items():
-                self.handleKeyframeInsertion(frameNumber=flushFrameNumber, localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"], anticipation=dict["anticipation"])
+                accumulatedValues = {}
+                for axis, values in dict["values"].items():
+                    accumulatedValues[axis] = 0.0
+                    if samplingMode == 'average':
+                        for value in values:
+                            accumulatedValues[axis] = accumulatedValues[axis] + (value / len(values))
+                    elif samplingMode == 'first':
+                        accumulatedValues[axis] = values[0]
+                    elif samplingMode == 'last':
+                        accumulatedValues[axis] = values[-1]
+
+                self.handleKeyframeInsertion(frameNumber=flushFrameNumber, localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=accumulatedValues, anticipation=dict["anticipation"])
         self.currentFrameValues = {}
 
     def handleKeyframeInsertion(self, frameNumber, localKey, target, dataPath, newValues, anticipation):
