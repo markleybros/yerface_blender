@@ -57,11 +57,13 @@ class YerFaceImportOperator(bpy.types.Operator):
 
             frame = int((packetObj['meta']['startTime'] * fps) + props.importStartFrame)
 
-            if lastFrame is not None and frame != lastFrame:
-                discardFrame = False
-                if lastFrame < props.importStartFrame:
-                    discardFrame = True
-                myUpdater.flushFrame(lastFrame, discardFrame)
+            if lastFrame is None or frame != lastFrame:
+                if lastFrame is not None:
+                    discardFrame = False
+                    if lastFrame < props.importStartFrame:
+                        discardFrame = True
+                    myUpdater.flushFrame(lastFrame, discardFrame)
+                context.scene.frame_set(frame)
 
             myUpdater.runUpdate(insertKeyframes=True, currentFrameNumber=frame)
             lastFrame = frame
