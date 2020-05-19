@@ -32,15 +32,29 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
 
         props = context.scene.yerFaceBlenderProperties
 
+        fps = context.scene.render.fps / context.scene.render.fps_base
+        time_step = 1/fps
+
         isPreviewRunning = True
         myReader = yerface_blender.WebsocketReader.YerFaceWebsocketReader(props.websocketURI)
         myReader.openWebsocket()
-        myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader)
+        myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader, fps)
+
+        if props.tickCallback != "":
+            tickProps = {
+                'userData': props.tickUserData,
+                'resetState': True,
+                'perfcapPacket': {},
+                'insertKeyframes': False,
+                'currentFrameNumber': None,
+                'flushLastFrame': False,
+                'discardLastFrameData': False,
+                'samplingMode': None,
+                'framesPerSecond': fps
+            }
+            bpy.app.driver_namespace[props.tickCallback](tickProps)
 
         context.window_manager.modal_handler_add(self)
-
-        fps = context.scene.render.fps / context.scene.render.fps_base
-        time_step = 1/fps
 
         myPreviewTimer = context.window_manager.event_timer_add(time_step, context.window)
         print("STARTED TIMER w/Time Step: ", time_step)

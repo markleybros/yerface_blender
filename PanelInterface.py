@@ -90,6 +90,12 @@ class ToolsPanel(bpy.types.Panel):
             box.prop(props, "phonemesScale")
             box.prop(props, "phonemesAnticipationFrames")
 
+        layout.label(text="Custom Code Callback:")
+        box = layout.box()
+        box.label(text="Optionally, specify a driver callback we will pass motion capture data and events to:")
+        box.prop(props, "tickCallback")
+        box.prop(props, "tickUserData")
+
         layout.label(text="Input Mode Settings:")
         box = layout.box()
         row = box.row(align=True)
@@ -107,6 +113,7 @@ class ToolsPanel(bpy.types.Panel):
             box.label(text="File input settings:")
             box.prop(props, "inputFilePath")
             box.prop(props, "importStartFrame")
+            box.prop(props, "samplingMode")
             row = box.row(align=False)
             row.alignment = 'LEFT'
             row.operator("yerface.do_import")

@@ -1,9 +1,14 @@
 
 import math
+import bpy
+
+import yerface_blender.DriverUtilities as dru
 
 class YerFaceSceneUpdater:
-    def __init__(self, context, myReader):
+    def __init__(self, context, myReader, fps):
         self.props = context.scene.yerFaceBlenderProperties
+
+        self.keyframeHelper = dru.KeyframeHelper()
 
         self.translationTarget = context.scene.objects.get(self.props.translationTargetObject)
         if self.translationTarget is not None:
@@ -67,22 +72,52 @@ class YerFaceSceneUpdater:
 
         self.phonemesWarnedAlready = {}
 
-        self.lastSetValues = {}
-
-        self.currentFrameNumber = None
-        self.currentFrameValues = {}
-
         self.reader = myReader
+        self.fps = fps
 
-    def flushFrame(self):
-        for localKey, dict in self.currentFrameValues.items():
-            self.handleKeyframeInsertion(localKey=localKey, target=dict["target"], dataPath=dict["dataPath"], newValues=dict["values"], anticipation=dict["anticipation"])
-        self.currentFrameValues = {}
+    def flushFrame(self, flushFrameNumber = -1, discardFrameData = False):
+        self.keyframeHelper.flushFrame(flushFrameNumber, discardFrameData, self.props.samplingMode)
+        if self.props.tickCallback != "":
+            tickProps = {
+                'userData': self.props.tickUserData,
+                'resetState': False,
+                'perfcapPacket': {},
+                'insertKeyframes': True,
+                'currentFrameNumber': flushFrameNumber,
+                'flushLastFrame': True,
+                'discardLastFrameData': discardFrameData,
+                'samplingMode': self.props.samplingMode,
+                'framesPerSecond': self.fps
+            }
+            bpy.app.driver_namespace[self.props.tickCallback](properties=tickProps)
 
     def runUpdate(self, insertKeyframes = False, currentFrameNumber = -1):
-        self.currentFrameNumber = currentFrameNumber
         packets = self.reader.returnNextPackets()
+
+        tickProps = {}
+        if self.props.tickCallback != "":
+            tickProps = {
+                'userData': self.props.tickUserData,
+                'resetState': False,
+                'perfcapPacket': {},
+                'insertKeyframes': insertKeyframes,
+                'currentFrameNumber': currentFrameNumber,
+                'flushLastFrame': False,
+                'discardLastFrameData': False,
+                'samplingMode': None,
+                'framesPerSecond': self.fps
+            }
+            if len(packets) < 1:
+                bpy.app.driver_namespace[self.props.tickCallback](properties=tickProps)
+
         for packet in packets:
+            if 'events' in packet:
+                del packet["events"]
+
+            if self.props.tickCallback != "":
+                tickProps['perfcapPacket'] = packet
+                bpy.app.driver_namespace[self.props.tickCallback](properties=tickProps)
+
             if packet['meta']['basis']:
                 if 'pose' in packet:
                     translation = self.TranslationTargetCoordinateMapper(packet['pose']['translation'])
@@ -109,9 +144,9 @@ class YerFaceSceneUpdater:
                         "z": self.translationScaleZ * (translation['z'] - self.locationOffsetZ)
                     }
                     if insertKeyframes:
-                        self.accumulateFrameData(localKey="translationTarget", target=self.translationTarget, dataPath="location", newValues=newValues, anticipation=self.props.translationAnticipationFrames)
+                        self.keyframeHelper.accumulateFrameData(localKey="translationTarget", target=self.translationTarget, dataPath="location", newValues=newValues, anticipation=self.props.translationAnticipationFrames)
                     else:
-                        self.handleUpdateTargetAll(target=self.translationTarget, dataPath="location", newValues=newValues)
+                        dru.handleUpdateTargetAll(target=self.translationTarget, dataPath="location", newValues=newValues)
                 if self.rotationTarget is not None:
                     rotation = self.RotationTargetRotationMapper(packet['pose']['rotation'])
                     self.rotationTarget.rotation_mode = 'XYZ'
@@ -121,9 +156,9 @@ class YerFaceSceneUpdater:
                         "z": math.radians(self.rotationScaleZ * (rotation['z'] - self.rotationOffsetZ))
                     }
                     if insertKeyframes:
-                        self.accumulateFrameData(localKey="rotationTarget", target=self.rotationTarget, dataPath="rotation_euler", newValues=newValues, anticipation=self.props.rotationAnticipationFrames)
+                        self.keyframeHelper.accumulateFrameData(localKey="rotationTarget", target=self.rotationTarget, dataPath="rotation_euler", newValues=newValues, anticipation=self.props.rotationAnticipationFrames)
                     else:
-                        self.handleUpdateTargetAll(target=self.rotationTarget, dataPath="rotation_euler", newValues=newValues)
+                        dru.handleUpdateTargetAll(target=self.rotationTarget, dataPath="rotation_euler", newValues=newValues)
             if 'trackers' in packet and self.faceArmatureBones is not None:
                 for name, tracker in packet['trackers'].items():
                     if name not in self.trackerOffsets:
@@ -142,9 +177,9 @@ class YerFaceSceneUpdater:
                             "z": translation['z'] - self.trackerOffsets[name]['z']
                         }
                         if insertKeyframes:
-                            self.accumulateFrameData(localKey="armatureBone-" + name, target=bone, dataPath="location", newValues=newValues, anticipation=self.props.faceAnticipationFrames)
+                            self.keyframeHelper.accumulateFrameData(localKey="armatureBone-" + name, target=bone, dataPath="location", newValues=newValues, anticipation=self.props.faceAnticipationFrames)
                         else:
-                            self.handleUpdateTargetAll(target=bone, dataPath="location", newValues=newValues)
+                            dru.handleUpdateTargetAll(target=bone, dataPath="location", newValues=newValues)
             if 'phonemes' in packet and self.phonemesTarget is not None:
                 for p, val in packet['phonemes'].items():
                     name = "Phoneme." + p
@@ -158,9 +193,9 @@ class YerFaceSceneUpdater:
                         }
                         self.phonemesTarget[name] = newValues["phoneme"]
                         if insertKeyframes:
-                            self.accumulateFrameData(localKey="phoneme-" + name, target=self.phonemesTarget, dataPath="[\"" + name + "\"]", newValues=newValues, anticipation=self.props.phonemesAnticipationFrames)
+                            self.keyframeHelper.accumulateFrameData(localKey="phoneme-" + name, target=self.phonemesTarget, dataPath="[\"" + name + "\"]", newValues=newValues, anticipation=self.props.phonemesAnticipationFrames)
                         else:
-                            self.handleUpdateTargetAll(target=self.phonemesTarget, dataPath="[\"" + name + "\"]", newValues=newValues)
+                            dru.handleUpdateTargetAll(target=self.phonemesTarget, dataPath="[\"" + name + "\"]", newValues=newValues)
                 ### FIXME: Not sure of the best way to mark the object dirty after updating custom properties. This works, but it's a hack.
                 if not insertKeyframes:
                     self.phonemesTarget.location.x += 0.0
@@ -192,50 +227,3 @@ class YerFaceSceneUpdater:
         if parts[0] == 'n':
             invert = -1.0
         return {'invert': invert, 'axis': parts[1]}
-
-    def interpretAxisAsRNAIndex(self, axis):
-        rnaAxisMap = {
-            "x": 0,
-            "y": 1,
-            "z": 2
-        }
-        if axis in rnaAxisMap:
-            return rnaAxisMap[axis]
-        return -1
-
-    def handleUpdateTargetAll(self, target, dataPath, newValues):
-        for axis, value in newValues.items():
-            self.handleUpdateTarget(target, dataPath, axis, value)
-
-    def handleUpdateTarget(self, target, dataPath, axis, value):
-        idx = self.interpretAxisAsRNAIndex(axis)
-        if idx >= 0:
-            setattr(getattr(target, dataPath), axis, value)
-        else:
-            setattr(target, dataPath, value)
-
-    def accumulateFrameData(self, localKey, target, dataPath, newValues, anticipation):
-        self.currentFrameValues[localKey] = {
-            "target": target,
-            "dataPath": dataPath,
-            "anticipation": anticipation,
-            "values": newValues
-        }
-
-    def handleKeyframeInsertion(self, localKey, target, dataPath, newValues, anticipation):
-        for axis, value in newValues.items():
-            if localKey not in self.lastSetValues:
-                self.lastSetValues[localKey] = {}
-            if axis not in self.lastSetValues[localKey]:
-                self.lastSetValues[localKey][axis] = {}
-            if "value" in self.lastSetValues[localKey][axis]:
-                delta = abs(value - self.lastSetValues[localKey][axis]["value"])
-                if delta < 0.0000000001:
-                    continue
-                if self.currentFrameNumber - self.lastSetValues[localKey][axis]["frame"] > anticipation:
-                    self.handleUpdateTarget(target, dataPath, axis, self.lastSetValues[localKey][axis]["value"])
-                    target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber - anticipation)
-            self.handleUpdateTarget(target, dataPath, axis, value)
-            target.keyframe_insert(data_path=dataPath, index=self.interpretAxisAsRNAIndex(axis), frame=self.currentFrameNumber)
-            self.lastSetValues[localKey][axis]["value"] = value
-            self.lastSetValues[localKey][axis]["frame"] = self.currentFrameNumber

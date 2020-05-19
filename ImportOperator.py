@@ -14,8 +14,25 @@ class YerFaceImportOperator(bpy.types.Operator):
     def execute(self, context):
         props = context.scene.yerFaceBlenderProperties
 
+        fps = context.scene.render.fps / context.scene.render.fps_base
+        print("Scene FPS is set to: ", fps)
+
         myReader = yerface_blender.FIFOReader.YerFaceFIFOReader()
-        myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader)
+        myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader, fps)
+
+        if props.tickCallback != "":
+            tickProps = {
+                'userData': props.tickUserData,
+                'resetState': True,
+                'perfcapPacket': {},
+                'insertKeyframes': True,
+                'currentFrameNumber': None,
+                'flushLastFrame': False,
+                'discardLastFrameData': False,
+                'samplingMode': None,
+                'framesPerSecond': fps
+            }
+            bpy.app.driver_namespace[props.tickCallback](tickProps)
 
         print("Kicked off Yer-Face import with file: ", props.inputFilePath)
         try:
@@ -23,9 +40,6 @@ class YerFaceImportOperator(bpy.types.Operator):
         except:
             print("Failed to open Yer-Face data file!")
             return {'CANCELLED'}
-
-        fps = context.scene.render.fps / context.scene.render.fps_base
-        print("Scene FPS is set to: ", fps)
 
         lastFrame = None
         for line in f:
@@ -43,14 +57,19 @@ class YerFaceImportOperator(bpy.types.Operator):
 
             frame = int((packetObj['meta']['startTime'] * fps) + props.importStartFrame)
 
-            if lastFrame is not None and frame != lastFrame:
-                myUpdater.flushFrame()
+            if lastFrame is None or frame != lastFrame:
+                if lastFrame is not None:
+                    discardFrame = False
+                    if lastFrame < props.importStartFrame:
+                        discardFrame = True
+                    myUpdater.flushFrame(lastFrame, discardFrame)
+                context.scene.frame_set(frame)
 
             myUpdater.runUpdate(insertKeyframes=True, currentFrameNumber=frame)
             lastFrame = frame
 
         if lastFrame is not None:
-            myUpdater.flushFrame()
+            myUpdater.flushFrame(lastFrame)
 
         f.close()
 
