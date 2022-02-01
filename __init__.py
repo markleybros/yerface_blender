@@ -1,12 +1,14 @@
 
 bl_info = {
-    'name': 'YerFace: Blender Plugin',
+    'name': 'YerFace! Performance Capture',
     'author': 'Alex Markley',
-    'version': (0, 0, 1),
-    'blender': (2, 79, 0),
-    'location': 'TBD',
-    'description': 'Blender integration with the YerFace performance capture tool.',
-    'category': 'Animation'
+    'version': (0, 1, 0),
+    'blender': (2, 80, 0),
+    'location': 'View3D > Properties > YerFace!',
+    'description': 'Integration with YerFace! A stupid facial performance capture engine for cartoon animation.',
+    'category': 'Animation',
+    'doc_url': 'https://github.com/markleybros/yerface_blender',
+    'tracker_url': 'https://github.com/markleybros/yerface_blender/issues',
 }
 
 import bpy
@@ -20,27 +22,38 @@ def syspathMunge(newpath):
 
 syspathMunge(os.path.abspath(os.path.dirname(__file__) + "/vendor"))
 
-import yerface_blender.AddonProps
-reload(yerface_blender.AddonProps)
-import yerface_blender.DriverUtilities
-reload(yerface_blender.DriverUtilities)
-import yerface_blender.FIFOReader
-reload(yerface_blender.FIFOReader)
-import yerface_blender.ImportOperator
-reload(yerface_blender.ImportOperator)
-import yerface_blender.PanelInterface
-reload(yerface_blender.PanelInterface)
-import yerface_blender.PreviewModal
-reload(yerface_blender.PreviewModal)
-import yerface_blender.SceneUtilities
-reload(yerface_blender.SceneUtilities)
-import yerface_blender.WebsocketReader
-reload(yerface_blender.WebsocketReader)
+from . import AddonProps
+reload(AddonProps)
+from . import DriverUtilities
+reload(DriverUtilities)
+from . import FIFOReader
+reload(FIFOReader)
+from . import ImportOperator
+reload(ImportOperator)
+from . import PanelInterface
+reload(PanelInterface)
+from . import PreviewModal
+reload(PreviewModal)
+from . import SceneUtilities
+reload(SceneUtilities)
+from . import WebsocketReader
+reload(WebsocketReader)
+
+classes = (
+    ImportOperator.YERFACE_OT_ImportFromFile,
+    PreviewModal.YERFACE_OT_PreviewStartOperator,
+    PreviewModal.YERFACE_OT_PreviewStopOperator,
+    PanelInterface.YERFACE_PT_ToolsPanel,
+)
 
 def register():
-    bpy.utils.register_module(__name__)
-    bpy.types.Scene.yerFaceBlenderProperties = bpy.props.PointerProperty(type=yerface_blender.AddonProps.YerFaceBlenderProperties)
+    bpy.utils.register_class(AddonProps.YerFaceBlenderProperties)
+    bpy.types.Scene.yerFaceBlenderProperties = bpy.props.PointerProperty(type=AddonProps.YerFaceBlenderProperties)
+    for cls in classes:
+        bpy.utils.register_class(cls)
 
 def unregister():
-    bpy.utils.unregister_module(__name__)
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
     del bpy.types.Scene.yerFaceBlenderProperties
+    bpy.utils.unregister_class(AddonProps.YerFaceBlenderProperties)

@@ -2,7 +2,7 @@
 import math
 import bpy
 
-import yerface_blender.DriverUtilities as dru
+from . import DriverUtilities as dru
 
 class YerFaceSceneUpdater:
     def __init__(self, context, myReader, fps):

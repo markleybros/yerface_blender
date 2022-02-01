@@ -23,150 +23,150 @@ yerFaceSamplingModeItems = [
 ]
 
 class YerFaceBlenderProperties(bpy.types.PropertyGroup):
-    translationTargetObject = bpy.props.StringProperty(
+    translationTargetObject: bpy.props.StringProperty(
         name = "Object",
         default = "")
-    translationTargetBone = bpy.props.StringProperty(
+    translationTargetBone: bpy.props.StringProperty(
         name = "Bone",
         default = "")
-    translationShowAdvanced = bpy.props.BoolProperty(default=False)
-    translationScale = bpy.props.FloatProperty(
+    translationShowAdvanced: bpy.props.BoolProperty(default=False)
+    translationScale: bpy.props.FloatProperty(
         name = "Scale",
         default = 0.00328084, # millimeters to feet
         min = 0.0)
-    translationScaleX = bpy.props.FloatProperty(
+    translationScaleX: bpy.props.FloatProperty(
         name = "X",
         default = 1.0,
         min = 0.0)
-    translationScaleY = bpy.props.FloatProperty(
+    translationScaleY: bpy.props.FloatProperty(
         name = "Y",
         default = 1.0,
         min = 0.0)
-    translationScaleZ = bpy.props.FloatProperty(
+    translationScaleZ: bpy.props.FloatProperty(
         name = "Z",
         default = 1.0,
         min = 0.0)
-    translationAxisMapX = bpy.props.EnumProperty(
+    translationAxisMapX: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map X",
         default = "p.x")
-    translationAxisMapY = bpy.props.EnumProperty(
+    translationAxisMapY: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map Y",
         default = "p.y")
-    translationAxisMapZ = bpy.props.EnumProperty(
+    translationAxisMapZ: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map Z",
         default = "p.z")
-    translationAnticipationFrames = bpy.props.IntProperty(
+    translationAnticipationFrames: bpy.props.IntProperty(
         name = "Anticipate Motion N Frames Ago",
         description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
         min = 1,
         default = 15)
 
-    rotationTargetObject = bpy.props.StringProperty(
+    rotationTargetObject: bpy.props.StringProperty(
         name = "Object",
         default = "")
-    rotationTargetBone = bpy.props.StringProperty(
+    rotationTargetBone: bpy.props.StringProperty(
         name = "Bone",
         default = "")
-    rotationShowAdvanced = bpy.props.BoolProperty(default=False)
-    rotationScale = bpy.props.FloatProperty(
+    rotationShowAdvanced: bpy.props.BoolProperty(default=False)
+    rotationScale: bpy.props.FloatProperty(
         name = "Scale",
         default = 1.0,
         min = 0.0)
-    rotationScaleX = bpy.props.FloatProperty(
+    rotationScaleX: bpy.props.FloatProperty(
         name = "X",
         default = 1.0,
         min = 0.0)
-    rotationScaleY = bpy.props.FloatProperty(
+    rotationScaleY: bpy.props.FloatProperty(
         name = "Y",
         default = 1.0,
         min = 0.0)
-    rotationScaleZ = bpy.props.FloatProperty(
+    rotationScaleZ: bpy.props.FloatProperty(
         name = "Z",
         default = 1.0,
         min = 0.0)
-    rotationAxisMapX = bpy.props.EnumProperty(
+    rotationAxisMapX: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map X",
         default = "p.x")
-    rotationAxisMapY = bpy.props.EnumProperty(
+    rotationAxisMapY: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map Y",
         default = "p.y")
-    rotationAxisMapZ = bpy.props.EnumProperty(
+    rotationAxisMapZ: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map Z",
         default = "p.z")
-    rotationAnticipationFrames = bpy.props.IntProperty(
+    rotationAnticipationFrames: bpy.props.IntProperty(
         name = "Anticipate Motion N Frames Ago",
         description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
         min = 1,
         default = 15)
 
-    faceArmatureObject = bpy.props.StringProperty(
+    faceArmatureObject: bpy.props.StringProperty(
         name = "Rig",
         default = "")
-    faceBoneTranslationScale = bpy.props.FloatProperty(
+    faceBoneTranslationScale: bpy.props.FloatProperty(
         name = "Scale",
         default = 0.01,
         min = 0.0)
-    faceShowAdvanced = bpy.props.BoolProperty(default=False)
-    faceBoneAxisMapX = bpy.props.EnumProperty(
+    faceShowAdvanced: bpy.props.BoolProperty(default=False)
+    faceBoneAxisMapX: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map X",
         default = "p.x")
-    faceBoneAxisMapY = bpy.props.EnumProperty(
+    faceBoneAxisMapY: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map Y",
         default = "p.y")
-    faceBoneAxisMapZ = bpy.props.EnumProperty(
+    faceBoneAxisMapZ: bpy.props.EnumProperty(
         items = yerFaceAxisMapEnumItems,
         name = "Map Z",
         default = "p.z")
-    faceAnticipationFrames = bpy.props.IntProperty(
+    faceAnticipationFrames: bpy.props.IntProperty(
         name = "Anticipate Motion N Frames Ago",
         description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
         min = 1,
         default = 15)
 
-    phonemesTargetObject = bpy.props.StringProperty(
+    phonemesTargetObject: bpy.props.StringProperty(
         name = "Object",
         default = "")
-    phonemesShowAdvanced = bpy.props.BoolProperty(default=False)
-    phonemesScale = bpy.props.FloatProperty(
+    phonemesShowAdvanced: bpy.props.BoolProperty(default=False)
+    phonemesScale: bpy.props.FloatProperty(
         name = "Scale",
         default = 1.0,
         min = 0.0)
-    phonemesAnticipationFrames = bpy.props.IntProperty(
+    phonemesAnticipationFrames: bpy.props.IntProperty(
         name = "Anticipate Motion N Frames Ago",
         description = "If we're holding a property via deduplicated keyframes, but the property is about to change, how many frames ago should we anticipate this.",
         min = 1,
         default = 1)
 
-    tickCallback = bpy.props.StringProperty(
+    tickCallback: bpy.props.StringProperty(
         name = "Tick Callback",
         default = "")
-    tickUserData = bpy.props.StringProperty(
+    tickUserData: bpy.props.StringProperty(
         name = "User Data",
         default = "")
 
-    inputMode = bpy.props.EnumProperty(
+    inputMode: bpy.props.EnumProperty(
         items = yerFaceInputModeItems,
         name = "Active Input Mode",
         default = "live")
-    samplingMode = bpy.props.EnumProperty(
+    samplingMode: bpy.props.EnumProperty(
         items = yerFaceSamplingModeItems,
         name = "Keyframe Sampling Mode",
         default = "average")
-    websocketURI = bpy.props.StringProperty(
+    websocketURI: bpy.props.StringProperty(
         name = "Websocket URI",
         default = "ws://localhost:9002")
-    inputFilePath = bpy.props.StringProperty(
+    inputFilePath: bpy.props.StringProperty(
         name="Perfcap JSON File",
         description="Exported performance capture data from YerFace!",
         subtype="FILE_PATH")
-    importStartFrame = bpy.props.IntProperty(
+    importStartFrame: bpy.props.IntProperty(
         name = "Start Frame",
         default = 1)

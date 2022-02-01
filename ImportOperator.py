@@ -2,10 +2,10 @@
 import bpy
 import json
 
-import yerface_blender.SceneUtilities
-import yerface_blender.FIFOReader
+from . import SceneUtilities
+from . import FIFOReader
 
-class YerFaceImportOperator(bpy.types.Operator):
+class YERFACE_OT_ImportFromFile(bpy.types.Operator):
     bl_idname = "yerface.do_import"
     bl_label = "Do Import"
     bl_description = "Imports YerFace performance capture data to keyframes."
@@ -17,8 +17,8 @@ class YerFaceImportOperator(bpy.types.Operator):
         fps = context.scene.render.fps / context.scene.render.fps_base
         print("Scene FPS is set to: ", fps)
 
-        myReader = yerface_blender.FIFOReader.YerFaceFIFOReader()
-        myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader, fps)
+        myReader = FIFOReader.YerFaceFIFOReader()
+        myUpdater = SceneUtilities.YerFaceSceneUpdater(context, myReader, fps)
 
         if props.tickCallback != "":
             tickProps = {
@@ -36,7 +36,7 @@ class YerFaceImportOperator(bpy.types.Operator):
 
         print("Kicked off Yer-Face import with file: ", props.inputFilePath)
         try:
-            f = open(props.inputFilePath, "r")
+            f = open(bpy.path.abspath(props.inputFilePath), "r")
         except:
             print("Failed to open Yer-Face data file!")
             return {'CANCELLED'}

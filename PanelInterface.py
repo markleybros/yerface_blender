@@ -1,14 +1,14 @@
 
 import bpy
 
-import yerface_blender.PreviewModal
-from yerface_blender.AddonProps import yerFaceInputModeItems
+from . import PreviewModal
+from .AddonProps import yerFaceInputModeItems
 
-class ToolsPanel(bpy.types.Panel):
+class YERFACE_PT_ToolsPanel(bpy.types.Panel):
     bl_label = "YerFace! Performance Capture"
     bl_space_type = "VIEW_3D"
-    bl_region_type = "TOOLS"
-    bl_category = "Animation"
+    bl_region_type = "UI"
+    bl_category = "YerFace!"
 
     def draw(self, context):
         layout = self.layout
@@ -105,7 +105,7 @@ class ToolsPanel(bpy.types.Panel):
             box.prop(props, "websocketURI")
             row = box.row(align=False)
             row.alignment = 'LEFT'
-            if yerface_blender.PreviewModal.YerFacePreviewStartOperator.isPreviewRunning(None):
+            if PreviewModal.YERFACE_OT_PreviewStartOperator.isPreviewRunning(None):
                 row.operator("wm.yerface_preview_stop")
             else:
                 row.operator("wm.yerface_preview_start")
