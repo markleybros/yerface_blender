@@ -1,15 +1,15 @@
 
 import bpy
 
-import yerface_blender.SceneUtilities
-import yerface_blender.WebsocketReader
+from . import SceneUtilities
+from . import WebsocketReader
 
 isPreviewRunning = False
 myPreviewTimer = None
 myReader = None
 myUpdater = None
 
-class YerFacePreviewStartOperator(bpy.types.Operator):
+class YERFACE_OT_PreviewStartOperator(bpy.types.Operator):
     bl_idname = "wm.yerface_preview_start"
     bl_label = "YerFace Preview Start"
     bl_description = "Start previewing data from the Yer Face performance capture tool."
@@ -36,9 +36,9 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
         time_step = 1/fps
 
         isPreviewRunning = True
-        myReader = yerface_blender.WebsocketReader.YerFaceWebsocketReader(props.websocketURI)
+        myReader = WebsocketReader.YerFaceWebsocketReader(props.websocketURI)
         myReader.openWebsocket()
-        myUpdater = yerface_blender.SceneUtilities.YerFaceSceneUpdater(context, myReader, fps)
+        myUpdater = SceneUtilities.YerFaceSceneUpdater(context, myReader, fps)
 
         if props.tickCallback != "":
             tickProps = {
@@ -56,7 +56,7 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
 
         context.window_manager.modal_handler_add(self)
 
-        myPreviewTimer = context.window_manager.event_timer_add(time_step, context.window)
+        myPreviewTimer = context.window_manager.event_timer_add(time_step, window=context.window)
         print("STARTED TIMER w/Time Step: ", time_step)
 
         return {'RUNNING_MODAL'}
@@ -77,12 +77,12 @@ class YerFacePreviewStartOperator(bpy.types.Operator):
         global isPreviewRunning
         return isPreviewRunning
 
-class YerFacePreviewStopOperator(bpy.types.Operator):
+class YERFACE_OT_PreviewStopOperator(bpy.types.Operator):
     bl_idname = "wm.yerface_preview_stop"
     bl_label = "YerFace Preview Stop"
     bl_description = "Stop previewing data from the Yer Face performance capture tool."
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        YerFacePreviewStartOperator.cancel(None, context)
+        YERFACE_OT_PreviewStartOperator.cancel(None, context)
         return {'FINISHED'}
