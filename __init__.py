@@ -1,12 +1,14 @@
 
 bl_info = {
-    'name': 'YerFace: Blender Plugin',
+    'name': 'YerFace! Performance Capture',
     'author': 'Alex Markley',
     'version': (0, 1, 0),
     'blender': (2, 80, 0),
-    'location': 'FIXME',
-    'description': 'Blender integration with the YerFace performance capture tool.',
-    'category': 'Animation'
+    'location': 'View3D > Properties > YerFace!',
+    'description': 'Integration with YerFace! A stupid facial performance capture engine for cartoon animation.',
+    'category': 'Animation',
+    'doc_url': 'https://github.com/markleybros/yerface_blender',
+    'tracker_url': 'https://github.com/markleybros/yerface_blender/issues',
 }
 
 import bpy
